@@ -11,11 +11,20 @@ import '../utilities.dart';
 import 'text_formfield.dart';
 
 class SearchField extends StatefulWidget {
-  const SearchField({super.key, this.isInPage = false, this.isHomePage = false, required this.hintText, this.searchQuery});
+  const SearchField({
+    super.key,
+    this.isInPage = false,
+    this.isHomePage = false,
+    required this.hintText,
+    this.searchQuery,
+    this.onChanged,
+  });
   final bool isInPage;
   final bool isHomePage;
   final String hintText;
   final String? searchQuery;
+  final ValueChanged<String>? onChanged;
+
   @override
   State<SearchField> createState() => _SearchFieldState();
 }
@@ -43,14 +52,19 @@ class _SearchFieldState extends State<SearchField> {
       try {
         setState(() {});
 
-        await _speechToText.listen(onResult: _onSpeechResult, listenFor: const Duration(seconds: 30), localeId: 'en_En', partialResults: false);
+        await _speechToText.listen(
+            onResult: _onSpeechResult,
+            listenFor: const Duration(seconds: 30),
+            localeId: 'en_En',
+            partialResults: false);
         await showDialog(
             context: context,
             builder: (BuildContext c) {
               return AlertDialog(
                 surfaceTintColor: Colors.white,
                 backgroundColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
                 content: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
@@ -62,7 +76,8 @@ class _SearchFieldState extends State<SearchField> {
                     const SizedBox(height: 10),
                     Text(
                       '''Say "Pizza"''',
-                      style: AppStyles.getSemiBoldTextStyle(fontSize: 13, color: Colors.grey.shade500),
+                      style: AppStyles.getSemiBoldTextStyle(
+                          fontSize: 13, color: Colors.grey.shade500),
                     ),
                     const SizedBox(height: 13),
                     CircleAvatar(
@@ -128,6 +143,12 @@ class _SearchFieldState extends State<SearchField> {
       _lastWords = result.recognizedWords;
       searchTextController.text = _lastWords;
     });
+    // If the speech recognition was successful, we can
+    // update the text field with the recognized words.
+    //Call onChanged when speech result is set
+    if (widget.onChanged != null) {
+      widget.onChanged!(_lastWords);
+    }
     context.pop();
     _stopListening();
     if (!widget.isInPage) {
@@ -159,13 +180,18 @@ class _SearchFieldState extends State<SearchField> {
       hint: widget.hintText,
       prefix: const Icon(Icons.search, color: Colors.grey),
       suffix: IconButton(
-        onPressed: _speechToText.isNotListening ? _startListening : _stopListening,
+        onPressed:
+            _speechToText.isNotListening ? _startListening : _stopListening,
         icon: const Icon(
           OradoIcon.mic_outlined,
           color: Colors.red,
         ),
       ),
+      onChanged: widget.onChanged, // Call onChanged when text is changed
       onFieldSubmitted: (String value) {
+        if (widget.onChanged != null) {
+          widget.onChanged!(value);
+        }
         //! context.pushNamed(
         // !  FoodListingScreen.route,
         // !  extra: <String, String>{'search_query': value},

@@ -142,7 +142,7 @@ class Cartproductrelation {
   String? addedAt;
   int? costPrice;
   int? categoryId;
-  Null? discountId;
+  Null discountId;
   int? subCategoryId;
   int? isAvailable;
   Productstablerelation1? productstablerelation1;
