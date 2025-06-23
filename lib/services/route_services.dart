@@ -21,6 +21,7 @@ import '../features/auth/presentation/new_password.dart';
 import '../features/auth/presentation/reset_password.dart';
 import '../features/auth/presentation/sign_up_screen.dart';
 import '../features/auth/presentation/login_with_phone_number_screen.dart';
+import '../features/location/presentation/address_screen.dart';
 import '../features/no_internet_page.dart';
 import 'connectivity_service.dart';
 
@@ -118,6 +119,12 @@ final router = GoRouter(
           name: MapScreen.route,
           pageBuilder: (context, state) =>
               getCustomTransition(state, const MapScreen()),
+        ),
+        GoRoute(
+          path: AddressScreen.route,
+          name: AddressScreen.route,
+          pageBuilder: (context, state) =>
+              getCustomTransition(state, const AddressScreen()),
         ),
         GoRoute(
           path: OrdersScreen.route,
