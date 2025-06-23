@@ -157,7 +157,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                                   mainAxisAlignment: MainAxisAlignment.center,
                                                   children: <Widget>[
                                                     Text(
-                                                      '3.3',
+                                                      '3.33',
                                                       style: AppStyles.getBoldTextStyle(
                                                         color: Colors.green.shade600,
                                                         fontSize: 16,
