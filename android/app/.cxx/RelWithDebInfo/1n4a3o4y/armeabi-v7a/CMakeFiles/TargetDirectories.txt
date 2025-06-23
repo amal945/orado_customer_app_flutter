@@ -1,0 +1,2 @@
+C:/Users/amals/Desktop/orado_customer_app_flutter/android/app/.cxx/RelWithDebInfo/1n4a3o4y/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/amals/Desktop/orado_customer_app_flutter/android/app/.cxx/RelWithDebInfo/1n4a3o4y/armeabi-v7a/CMakeFiles/rebuild_cache.dir

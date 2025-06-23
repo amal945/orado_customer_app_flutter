@@ -1,0 +1,2 @@
+D:/orado_customer_app-master/android/app/.cxx/RelWithDebInfo/2s6f111t/x86_64/CMakeFiles/edit_cache.dir
+D:/orado_customer_app-master/android/app/.cxx/RelWithDebInfo/2s6f111t/x86_64/CMakeFiles/rebuild_cache.dir
