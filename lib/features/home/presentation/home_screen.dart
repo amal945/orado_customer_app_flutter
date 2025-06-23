@@ -4,6 +4,7 @@ import 'package:orado_customer/features/auth/presentation/get_started_screen.dar
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/home/provider/home_provider.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
+import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
 import 'package:orado_customer/utilities/common/scaffold_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,7 +28,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int categoryIndex = 0;
-
+  String _searchQuery = '';
   @override
   void initState() {
     super.initState();
@@ -68,207 +69,267 @@ class _HomeState extends State<Home> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            const SearchField(
-                                isHomePage: true, hintText: 'Find your food'),
-                            Card(
-                              color: Colors.grey.shade100,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10)),
-                              child: Container(
-                                height: 170,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  image: const DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image:
-                                        AssetImage('assets/images/image.png'),
-                                  ),
+                            SearchField(
+                              isHomePage: true,
+                              hintText: 'Find your food',
+                              onChanged: (value) {
+                                setState(() {
+                                  _searchQuery = value;
+                                });
+                                Provider.of<HomeProvider>(context,
+                                        listen: false)
+                                    .searchRestaurants(value);
+                              },
+                            ),
+                            if (_searchQuery.isNotEmpty) ...[
+                              const SizedBox(height: 20),
+                              Align(
+                                child: Text(
+                                  '${provider.filteredRestaurantList.length} restaurants found',
+                                  style: AppStyles.getRegularTextStyle(
+                                      fontSize: 15,
+                                      color: Colors.grey.shade700),
                                 ),
-                                width: double.infinity,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(18.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: <Widget>[
-                                        Text(
-                                          'Free Delivery For \nNext 3 month',
-                                          style: AppStyles.getBoldTextStyle(
-                                              fontSize: 17),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        Row(
-                                          children: <Widget>[
-                                            Text(
-                                              'Order Now',
-                                              style: AppStyles
-                                                  .getSemiBoldTextStyle(
-                                                      color:
-                                                          AppColors.baseColor,
-                                                      fontSize: 12),
-                                            ),
-                                            Icon(
-                                              Icons.arrow_right_alt,
-                                              color: AppColors.baseColor,
-                                            )
-                                          ],
-                                        ),
-                                      ],
+                              ),
+                              const SizedBox(height: 12),
+                              ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount:
+                                    provider.filteredRestaurantList.length,
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final data =
+                                      provider.filteredRestaurantList[index];
+                                  return GestureDetector(
+                                    onTap: () {
+                                      context.pushNamed(
+                                        MerchantDetailScreen.route,
+                                        extra: {
+                                          'searchQuery': _searchQuery,
+                                        },
+                                      );
+                                    },
+                                    child: FoodTileCardLarge(
+                                      merchantId: data.merchantId,
+                                      name: data.shopName,
+                                      distance: data.distance,
+                                      image: data.image?.imageName,
+                                      productName: data.availableFoods
+                                          ?.map((food) => food.name)
+                                          .join(', '),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ] else ...[
+                              Card(
+                                color: Colors.grey.shade100,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: Container(
+                                  height: 170,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    image: const DecorationImage(
+                                      fit: BoxFit.cover,
+                                      image:
+                                          AssetImage('assets/images/image.png'),
+                                    ),
+                                  ),
+                                  width: double.infinity,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(18.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: <Widget>[
+                                          Text(
+                                            'Free Delivery For \nNext 3 month',
+                                            style: AppStyles.getBoldTextStyle(
+                                                fontSize: 17),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          Row(
+                                            children: <Widget>[
+                                              Text(
+                                                'Order Now',
+                                                style: AppStyles
+                                                    .getSemiBoldTextStyle(
+                                                        color:
+                                                            AppColors.baseColor,
+                                                        fontSize: 12),
+                                              ),
+                                              Icon(
+                                                Icons.arrow_right_alt,
+                                                color: AppColors.baseColor,
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(
-                              height: 15,
-                            ),
-                            ElevatedButton(
-                                onPressed: () async {
-                                  SharedPreferences sharedPreferences =
-                                      await SharedPreferences.getInstance();
-                                  sharedPreferences.clear();
-                                  context.goNamed(GetStartedScreen.route);
-                                },
-                                child: Text("Log Out")),
-                            const SizedBox(height: 30),
-                            provider.categoriesData.isNotEmpty &&
-                                provider.categoriesData.first.data?.isNotEmpty == true
-                                ? CategoriesSection(
-                              categories: provider.categoriesData.first.data!,
-                            )
-                                : const SizedBox.shrink(),
-                            const SizedBox(height: 20),
-
-                            // const SizedBox(height: 40),
-                            // Text(
-                            //   'Explore',
-                            //   style: AppStyles.getMediumTextStyle(fontSize: 17),
-                            // ),
-                            // const SizedBox(height: 10),
-                            // Card(
-                            //   color: Colors.white,
-                            //   child: Stack(
-                            //     children: <Widget>[
-                            //       Align(
-                            //         child: Image.asset(
-                            //           'assets/images/Mask group.png',
-                            //           fit: BoxFit.cover,
-                            //         ),
-                            //       ),
-                            //       Padding(
-                            //         padding: const EdgeInsets.all(18.0),
-                            //         child: Column(
-                            //           crossAxisAlignment:
-                            //               CrossAxisAlignment.start,
-                            //           mainAxisAlignment:
-                            //               MainAxisAlignment.center,
-                            //           children: <Widget>[
-                            //             Text(
-                            //               'Offers',
-                            //               style: AppStyles.getBoldTextStyle(
-                            //                   fontSize: 17),
-                            //             ),
-                            //             const SizedBox(height: 20),
-                            //             Row(
-                            //               children: <Widget>[
-                            //                 Text(
-                            //                   'Order Now',
-                            //                   style: AppStyles
-                            //                       .getSemiBoldTextStyle(
-                            //                           color:
-                            //                               AppColors.baseColor,
-                            //                           fontSize: 16),
-                            //                 ),
-                            //                 Icon(
-                            //                   Icons.arrow_right_alt,
-                            //                   color: AppColors.baseColor,
-                            //                 )
-                            //               ],
-                            //             ),
-                            //           ],
-                            //         ),
-                            //       ),
-                            //     ],
-                            //   ),
-                            // ),
-                            // const SizedBox(height: 20),
-                            Text(
-                              'All Restaurants',
-                              style: AppStyles.getBoldTextStyle(
-                                fontSize: 20,
+                              const SizedBox(
+                                height: 15,
                               ),
-                            ),
-                            const SizedBox(height: 15),
-
-                            Align(
-                              child: Text(
-                                '${provider.restaurantList.length} restaurants delivering to you',
-                                style: AppStyles.getRegularTextStyle(
-                                    fontSize: 15, color: Colors.grey.shade700),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ListView.builder(
-                              padding: EdgeInsets.zero,
-                              itemCount:
-                                  // provider.homeModel?.topRestaurants?.length ?? 0,
-
-                              provider.restaurantList.length,
-                              physics: const NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              itemBuilder: (BuildContext context, int index) {
-                                final data = provider.restaurantList[index];
-                                return FoodTileCardLarge(
-                                  merchantId: data.merchantId,
-                                  name: data.shopName,
-                                  distance: data.distance,
-                                  image: data.image!.imageName,
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('Recommended for you',
-                                  style: AppStyles.getBoldTextStyle(
-                                    fontSize: 20,
-                                  )),
-                            ),
-                            const SizedBox(height: 20),
-                            Visibility(
-                              visible: provider.isRecommendedAvailable,
-                              child: SizedBox(
-                                height: 266,
-                                child: ListView.builder(
-                                  itemCount: provider.recommendedRestaurants.length,
-                                  scrollDirection: Axis.horizontal,
-                                  shrinkWrap: true,
-                                  itemBuilder: (BuildContext c, int i) {
-                                    final data = provider.recommendedRestaurants[i];
-                                    return GestureDetector(
-                                      onTap: () {
-                                        // context.pushNamed(AppPaths.singleRestaurentScreen);
-                                      },
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10.0,
-                                        ),
-                                        child: FoodTileCardSmall(
-                                          image: data.image!.imageName,
-                                          name: data.shopName,
-                                          distance: data.distance,
-                                          time: data.deliveryTime,
-                                        ),
-                                      ),
-                                    );
+                              ElevatedButton(
+                                  onPressed: () async {
+                                    SharedPreferences sharedPreferences =
+                                        await SharedPreferences.getInstance();
+                                    sharedPreferences.clear();
+                                    context.goNamed(GetStartedScreen.route);
                                   },
+                                  child: Text("Log Out")),
+                              const SizedBox(height: 30),
+                              provider.categoriesData.isNotEmpty &&
+                                      provider.categoriesData.first.data
+                                              ?.isNotEmpty ==
+                                          true
+                                  ? CategoriesSection(
+                                      categories:
+                                          provider.categoriesData.first.data!,
+                                    )
+                                  : const SizedBox.shrink(),
+                              const SizedBox(height: 20),
+
+                              // const SizedBox(height: 40),
+                              // Text(
+                              //   'Explore',
+                              //   style: AppStyles.getMediumTextStyle(fontSize: 17),
+                              // ),
+                              // const SizedBox(height: 10),
+                              // Card(
+                              //   color: Colors.white,
+                              //   child: Stack(
+                              //     children: <Widget>[
+                              //       Align(
+                              //         child: Image.asset(
+                              //           'assets/images/Mask group.png',
+                              //           fit: BoxFit.cover,
+                              //         ),
+                              //       ),
+                              //       Padding(
+                              //         padding: const EdgeInsets.all(18.0),
+                              //         child: Column(
+                              //           crossAxisAlignment:
+                              //               CrossAxisAlignment.start,
+                              //           mainAxisAlignment:
+                              //               MainAxisAlignment.center,
+                              //           children: <Widget>[
+                              //             Text(
+                              //               'Offers',
+                              //               style: AppStyles.getBoldTextStyle(
+                              //                   fontSize: 17),
+                              //             ),
+                              //             const SizedBox(height: 20),
+                              //             Row(
+                              //               children: <Widget>[
+                              //                 Text(
+                              //                   'Order Now',
+                              //                   style: AppStyles
+                              //                       .getSemiBoldTextStyle(
+                              //                           color:
+                              //                               AppColors.baseColor,
+                              //                           fontSize: 16),
+                              //                 ),
+                              //                 Icon(
+                              //                   Icons.arrow_right_alt,
+                              //                   color: AppColors.baseColor,
+                              //                 )
+                              //               ],
+                              //             ),
+                              //           ],
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
+                              // const SizedBox(height: 20),
+                              Text(
+                                'All Restaurants',
+                                style: AppStyles.getBoldTextStyle(
+                                  fontSize: 20,
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 15),
+
+                              Align(
+                                child: Text(
+                                  '${provider.restaurantList.length} restaurants delivering to you',
+                                  style: AppStyles.getRegularTextStyle(
+                                      fontSize: 15,
+                                      color: Colors.grey.shade700),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount:
+                                    // provider.homeModel?.topRestaurants?.length ?? 0,
+
+                                    provider.restaurantList.length,
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemBuilder: (BuildContext context, int index) {
+                                  final data = provider.restaurantList[index];
+                                  return FoodTileCardLarge(
+                                    merchantId: data.merchantId,
+                                    name: data.shopName,
+                                    distance: data.distance,
+                                    image: data.image!.imageName,
+                                  );
+                                },
+                              ),
+
+                              const SizedBox(height: 20),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text('Recommended for you',
+                                    style: AppStyles.getBoldTextStyle(
+                                      fontSize: 20,
+                                    )),
+                              ),
+                              const SizedBox(height: 20),
+                              Visibility(
+                                visible: provider.isRecommendedAvailable,
+                                child: SizedBox(
+                                  height: 266,
+                                  child: ListView.builder(
+                                    itemCount:
+                                        provider.recommendedRestaurants.length,
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    itemBuilder: (BuildContext c, int i) {
+                                      final data =
+                                          provider.recommendedRestaurants[i];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          // context.pushNamed(AppPaths.singleRestaurentScreen);
+                                        },
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 10.0,
+                                          ),
+                                          child: FoodTileCardSmall(
+                                            image: data.image!.imageName,
+                                            name: data.shopName,
+                                            distance: data.distance,
+                                            time: data.deliveryTime,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),

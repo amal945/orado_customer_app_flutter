@@ -14,9 +14,11 @@ import '../../../utilities/common/food_listing_card.dart';
 import '../../../utilities/utilities.dart';
 
 class MerchantDetailScreen extends StatefulWidget {
-  const MerchantDetailScreen({super.key, this.id});
+  const MerchantDetailScreen({super.key, this.id, this.searchQuery});
   static String route = 'merchant-details';
   final String? id;
+  final String? searchQuery;
+
   @override
   State<MerchantDetailScreen> createState() => _MerchantDetailScreenState();
 }
@@ -33,14 +35,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<MerchantProvider>();
       final locProvider = context.read<LocationProvider>();
-      provider.viewAllProducts(
-        context,
-        limit: 20,
-        page: 1,
-        lat: locProvider.currentLocationLatLng!.latitude,
-        long: locProvider.currentLocationLatLng!.longitude,
-        merchantId: widget.id!,
-      );
     });
   }
 
@@ -84,7 +78,23 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                 ),
               );
             }
-            final Productstablerelation1? merchant = provider.merchantProducts[widget.id]!.first.product!.productstablerelation1;
+
+            final allProducts = provider.merchantProducts[widget.id]!;
+            final filteredProducts = (widget.searchQuery != null && widget.searchQuery!.isNotEmpty)
+                ? allProducts.where((product) {
+                    final nameMatch = (product.product?.productName ?? '')
+                        .toLowerCase()
+                        .contains(widget.searchQuery!.toLowerCase());
+                    // Replace 'foodType' with the correct property or remove this filter if not needed.
+                    // Example: If you want to filter only by product name, remove cuisineMatch.
+                    return nameMatch;
+                  }).toList()
+                : allProducts;
+
+            final Productstablerelation1? merchant = filteredProducts.isNotEmpty
+                ? filteredProducts.first.product!.productstablerelation1
+                : allProducts.first.product!.productstablerelation1;
+            // final Productstablerelation1? merchant = provider.merchantProducts[widget.id]!.first.product!.productstablerelation1;
             return SliverList(
               delegate: SliverChildListDelegate(
                 <Widget>[
@@ -147,7 +157,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                                   mainAxisAlignment: MainAxisAlignment.center,
                                                   children: <Widget>[
                                                     Text(
-                                                      '3.3',
+                                                      '3.33',
                                                       style: AppStyles.getBoldTextStyle(
                                                         color: Colors.green.shade600,
                                                         fontSize: 16,
@@ -231,7 +241,12 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                             ),
                                           ),
                                           const SizedBox(height: 20),
-                                          FoodsListingCard(products: provider.merchantProducts[widget.id]!, merchantId: widget.id!),
+                                          // FoodsListingCard(products: provider.merchantProducts[widget.id]!, merchantId: widget.id!),
+                                          // --- Show filtered products if searchQuery is present ---
+                                          FoodsListingCard(
+                                            products: filteredProducts,
+                                            merchantId: widget.id!,
+                                          ),
                                           const SizedBox(height: 30),
                                           // Align(
                                           //   alignment: Alignment.centerLeft,

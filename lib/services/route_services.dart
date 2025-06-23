@@ -117,8 +117,24 @@ final router = GoRouter(
         GoRoute(
           path: MapScreen.route,
           name: MapScreen.route,
+          pageBuilder: (context, state) {
+            final args = state.extra as Map<String, String>?;
+
+            return getCustomTransition(
+              state,
+              MapScreen(
+                lat: args?['lat'],
+                long: args?['long'],
+                address: args?['address'],
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: AddressScreen.route,
+          name: AddressScreen.route,
           pageBuilder: (context, state) =>
-              getCustomTransition(state, const MapScreen()),
+              getCustomTransition(state, const AddressScreen()),
         ),
         GoRoute(
           path: AddressScreen.route,
