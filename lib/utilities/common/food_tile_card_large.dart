@@ -14,13 +14,11 @@ class FoodTileCardLarge extends StatelessWidget {
     this.name,
     this.distance,
     this.merchantId,
-    this.productName,
   });
   final String? merchantId;
   final String? image;
   final String? name;
   final String? distance;
-  final String? productName;
   @override
   Widget build(BuildContext context) {
     return Padding(

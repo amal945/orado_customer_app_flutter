@@ -24,8 +24,6 @@ class HomeProvider extends ChangeNotifier {
 
   List<Restaurant> restaurantList = [];
 
-  List<Restaurant> filteredRestaurantList = [];
-
   bool isRecommendedAvailable = false;
 
   List<RecommendedRestaurant> recommendedRestaurants = [];
@@ -80,8 +78,6 @@ class HomeProvider extends ChangeNotifier {
           restaurantData.add(restaurantResponse);
           restaurantList.clear();
           restaurantList.addAll(restaurantResponse.data!);
-          filteredRestaurantList =
-              List.from(restaurantList); // Initialize with all restaurants
           notifyListeners();
         }
 
@@ -95,8 +91,7 @@ class HomeProvider extends ChangeNotifier {
               recommendedRestaurantResponse.count! > 0 ? true : false;
 
           recommendedRestaurants.clear();
-          recommendedRestaurants
-              .addAll(recommendedRestaurantResponse.data ?? []);
+          recommendedRestaurants.addAll(recommendedRestaurantResponse.data ?? []);
           notifyListeners();
         }
       } else {
@@ -107,22 +102,5 @@ class HomeProvider extends ChangeNotifier {
       showSnackBar(context, message: "$e", backgroundColor: Colors.red);
     }
     _toggleLoading(false);
-  }
-
-  void searchRestaurants(String query) {
-    if (query.isEmpty) {
-      filteredRestaurantList = List.from(restaurantList);
-    } else {
-      filteredRestaurantList = restaurantList.where((restaurant) {
-        final nameMatch = (restaurant.shopName ?? '')
-            .toLowerCase()
-            .contains(query.toLowerCase());
-        final foodMatch = (restaurant.availableFoods ?? []).any((food) =>
-            (food.name ?? '').toLowerCase().contains(query.toLowerCase()) ||
-            (food.foodType ?? '').toLowerCase().contains(query.toLowerCase()));
-        return nameMatch || foodMatch;
-      }).toList();
-    }
-    notifyListeners();
   }
 }

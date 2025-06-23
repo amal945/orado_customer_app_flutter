@@ -82,7 +82,6 @@ class APIServices {
     return response;
   }
 
-
   // Merchants ------------------------------------------------------------------------------------------------------------------------------------------------------------
   Future<http.Response> viewAllProducts({
     required int limit,
