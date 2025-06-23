@@ -41,6 +41,8 @@ class LocationProvider extends ChangeNotifier {
         currentLocationAddress =
             '${place.name}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
       }
+    }else{
+      currentLocationAddress = address;
     }
   }
 

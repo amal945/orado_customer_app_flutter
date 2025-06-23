@@ -16,6 +16,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/auth/provider/auth_provider.dart';
 import 'features/auth/provider/login_provider.dart';
+import 'features/location/provider/address_provider.dart';
 import 'features/user/provider/user_provider.dart';
 import 'services/route_services.dart' as route;
 import 'utilities/utilities.dart';
@@ -100,6 +101,8 @@ class _MyAppState extends State<MyApp> {
                   create: (_) => SplashProvider()),
               ChangeNotifierProvider<MapScreenProvider>(
                   create: (_) => MapScreenProvider()),
+              ChangeNotifierProvider<AddressProvider>(
+                  create: (_) => AddressProvider()),
             ],
             child: child,
           );

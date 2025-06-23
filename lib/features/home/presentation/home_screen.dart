@@ -41,54 +41,6 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    final List<TopRestaurants> dummyRestaurants = [
-      TopRestaurants(
-        shopName: "Pizza Palace",
-        distance: 2.5,
-        merchantId: "101",
-        image: Categoryimagerelation(
-          imageName:
-              "https://lh4.googleusercontent.com/proxy/vbvJGJwubbUqFTJnYsfutG1aALS-ZD2Hsx0m-kOs5faF5fqfCTB6Q5CWTApvWQIq-aqC7InWn8RT1qzWMSgmwim9JgDr516W",
-        ),
-      ),
-      TopRestaurants(
-        shopName: "Burger Barn",
-        distance: 1.2,
-        merchantId: "102",
-        image: Categoryimagerelation(
-          imageName:
-              "https://lh4.googleusercontent.com/proxy/vbvJGJwubbUqFTJnYsfutG1aALS-ZD2Hsx0m-kOs5faF5fqfCTB6Q5CWTApvWQIq-aqC7InWn8RT1qzWMSgmwim9JgDr516W",
-        ),
-      ),
-      TopRestaurants(
-        shopName: "Sushi Central",
-        distance: 3.0,
-        merchantId: "103",
-        image: Categoryimagerelation(
-          imageName:
-              "https://lh4.googleusercontent.com/proxy/vbvJGJwubbUqFTJnYsfutG1aALS-ZD2Hsx0m-kOs5faF5fqfCTB6Q5CWTApvWQIq-aqC7InWn8RT1qzWMSgmwim9JgDr516W",
-        ),
-      ),
-      TopRestaurants(
-        shopName: "Taco Town",
-        distance: 0.8,
-        merchantId: "104",
-        image: Categoryimagerelation(
-          imageName:
-              "https://lh4.googleusercontent.com/proxy/vbvJGJwubbUqFTJnYsfutG1aALS-ZD2Hsx0m-kOs5faF5fqfCTB6Q5CWTApvWQIq-aqC7InWn8RT1qzWMSgmwim9JgDr516W",
-        ),
-      ),
-      TopRestaurants(
-        shopName: "Curry Corner",
-        distance: 4.1,
-        merchantId: "105",
-        image: Categoryimagerelation(
-          imageName:
-              "https://lh4.googleusercontent.com/proxy/vbvJGJwubbUqFTJnYsfutG1aALS-ZD2Hsx0m-kOs5faF5fqfCTB6Q5CWTApvWQIq-aqC7InWn8RT1qzWMSgmwim9JgDr516W",
-        ),
-      ),
-    ];
-
     return ScaffoldBuilder(
       route: Home.route,
       body: Consumer<HomeProvider>(builder: (context, provider, _) {
