@@ -6,6 +6,9 @@ import 'package:orado_customer/features/auth/presentation/otp_screen.dart';
 import 'package:orado_customer/features/cart/presentation/cart_screen.dart';
 import 'package:orado_customer/features/cart/presentation/order_status_screen.dart';
 import 'package:orado_customer/features/home/presentation/home_screen.dart';
+import 'package:orado_customer/features/location/presentation/address_screen.dart';
+import 'package:orado_customer/features/location/presentation/address_screen.dart';
+import 'package:orado_customer/features/location/presentation/address_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
@@ -116,8 +119,24 @@ final router = GoRouter(
         GoRoute(
           path: MapScreen.route,
           name: MapScreen.route,
+          pageBuilder: (context, state) {
+            final args = state.extra as Map<String, String>?;
+
+            return getCustomTransition(
+              state,
+              MapScreen(
+                lat: args?['lat'],
+                long: args?['long'],
+                address: args?['address'],
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: AddressScreen.route,
+          name: AddressScreen.route,
           pageBuilder: (context, state) =>
-              getCustomTransition(state, const MapScreen()),
+              getCustomTransition(state, const AddressScreen()),
         ),
         GoRoute(
           path: OrdersScreen.route,
