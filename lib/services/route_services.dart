@@ -6,6 +6,7 @@ import 'package:orado_customer/features/auth/presentation/otp_screen.dart';
 import 'package:orado_customer/features/cart/presentation/cart_screen.dart';
 import 'package:orado_customer/features/cart/presentation/order_status_screen.dart';
 import 'package:orado_customer/features/home/presentation/home_screen.dart';
+import 'package:orado_customer/features/location/models/address_response_model.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
@@ -214,3 +215,4 @@ Page<dynamic> getCustomTransition(GoRouterState state, Widget child) {
     },
   );
 }
+

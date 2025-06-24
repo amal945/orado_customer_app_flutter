@@ -8,14 +8,15 @@ import '../../../utilities/colors.dart';
 import '../../../utilities/common/loading_widget.dart';
 import '../../../utilities/styles.dart';
 import '../../location/provider/location_provider.dart';
+import '../models/address_response_model.dart';
 import '../provider/map_provider.dart';
 
 class MapScreen extends StatefulWidget {
   final String? lat;
   final String? long;
   final String? address;
-
-  const MapScreen({super.key, this.lat, this.long, this.address});
+  final Addresses? currentAddress;
+  const MapScreen({super.key, this.lat, this.long, this.address , this.currentAddress});
 
   static const String route = 'map-screen';
 
@@ -32,9 +33,9 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.lat == null && widget.long == null && widget.address == null) {
-        context.read<LocationProvider>().getCurrentLocation(context);
+     await   context.read<LocationProvider>().getCurrentLocation(context);
       } else {
-        context.read<LocationProvider>().setLatLongAndAddress(
+      await  context.read<LocationProvider>().setLatLongAndAddress(
               latitude: double.parse(widget.lat!),
               longitude: double.parse(widget.long!),
               address: null,
@@ -115,11 +116,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _showAddressFormSheet(String address) {
-    // final houseController = TextEditingController();
-    // final areaController = TextEditingController();
-    // final directionController = TextEditingController();
-    // final receiverPhoneController = TextEditingController();
-    // final receiverNameController = TextEditingController();
+
 
     showModalBottomSheet(
       context: context,
@@ -137,117 +134,137 @@ class _MapScreenState extends State<MapScreen> {
           ),
           child: Consumer<MapScreenProvider>(
             builder: (context, provider, _) {
-              return SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.location_pin, color: Colors.red),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            address,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      "A detailed address will help our Delivery Partner reach your doorstep easily",
-                      style: TextStyle(color: Colors.orange, fontSize: 13),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: provider.houseController,
-                      decoration: const InputDecoration(
-                        labelText: "House / Flat / Floor No.",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: provider.areaController,
-                      decoration: const InputDecoration(
-                        labelText: "Apartment / Road / Area",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: provider.directionController,
-                      decoration: const InputDecoration(
-                        hintText: "e.g. Ring the bell on the red gate",
-                        labelText: "Directions to reach (Optional)",
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLength: 200,
-                    ),
-                    const SizedBox(height: 10),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: provider.tags.map((tag) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: ChoiceChip(
-                              label: Text(tag),
-                              selected: provider.selectedTag == tag,
-                              onSelected: (_) {
-                                provider.selectTag(tag);
-                              },
+              return Form(
+                key: provider.formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.location_pin, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              address,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
                             ),
-                          );
-                        }).toList(),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    if (provider.selectedTag == 'Home') ...[
-                      TextField(
-                        controller: provider.receiverPhoneController,
-                        decoration: const InputDecoration(
-                          labelText: "Optional phone number",
-                          border: OutlineInputBorder(),
-                        ),
-                        keyboardType: TextInputType.phone,
+                      const SizedBox(height: 6),
+                      const Text(
+                        "A detailed address will help our Delivery Partner reach your doorstep easily",
+                        style: TextStyle(color: Colors.orange, fontSize: 13),
                       ),
                       const SizedBox(height: 10),
-                    ] else if (provider.selectedTag != null) ...[
-                      TextField(
-                        controller: provider.receiverNameController,
+                      TextFormField(
+                        controller: provider.houseController,
                         decoration: const InputDecoration(
-                          labelText: "Receiver name",
+                          labelText: "House / Flat / Floor No.",
                           border: OutlineInputBorder(),
                         ),
+                        validator: (value) =>
+                        value == null || value.trim().isEmpty ? 'Required' : null,
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: provider.areaController,
+                        decoration: const InputDecoration(
+                          labelText: "Apartment / Road / Area",
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) =>
+                        value == null || value.trim().isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 10),
                       TextField(
-                        controller: provider.receiverPhoneController,
+                        controller: provider.directionController,
                         decoration: const InputDecoration(
-                          labelText: "Receiver phone number",
+                          hintText: "e.g. Ring the bell on the red gate",
+                          labelText: "Directions to reach (Optional)",
                           border: OutlineInputBorder(),
                         ),
-                        keyboardType: TextInputType.phone,
+                        maxLength: 200,
                       ),
                       const SizedBox(height: 10),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: provider.tags.map((tag) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: ChoiceChip(
+                                label: Text(tag),
+                                selected: provider.selectedTag == tag,
+                                onSelected: (_) {
+                                  provider.selectTag(tag);
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      if (provider.selectedTag == 'Home') ...[
+                        TextFormField(
+                          controller: provider.receiverPhoneController,
+                          decoration: const InputDecoration(
+                            labelText: "Optional phone number",
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 10),
+                      ] else if (provider.selectedTag != null) ...[
+                        TextFormField(
+                          controller: provider.receiverNameController,
+                          decoration: const InputDecoration(
+                            labelText: "Receiver name",
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) =>
+                          value == null || value.trim().isEmpty ? 'Required' : null,
+                        ),
+                        const SizedBox(height: 10),
+                        TextFormField(
+                          controller: provider.receiverPhoneController,
+                          decoration: const InputDecoration(
+                            labelText: "Receiver phone number",
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.phone,
+                          validator: (value) =>
+                          value == null || value.trim().isEmpty
+                              ? 'Required'
+                              : (value.length < 10
+                              ? 'Invalid phone number'
+                              : null),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                          ),
+                          onPressed: () async {
+                            if (provider.formKey.currentState!.validate()) {
+                              await provider.addAddress(
+                                  Navigator.of(context).context, _selectedLatLng!);
+                            }
+                          },
+                          child: Text("SAVE ADDRESS",
+                              style: AppStyles.getBoldTextStyle(
+                                  fontSize: 14, color: Colors.white)),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                     ],
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                        ),
-                        onPressed: () {},
-                        child: Text("SAVE ADDRESS",
-                            style: AppStyles.getBoldTextStyle(
-                                fontSize: 14, color: Colors.white)),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                  ),
                 ),
               );
             },
@@ -256,6 +273,7 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
