@@ -1,9 +1,9 @@
-import 'dart:math';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
+import 'package:orado_customer/features/user/provider/user_provider.dart';
+import 'package:provider/provider.dart';
 
 import '../utilities.dart';
 
@@ -21,8 +21,12 @@ class FoodTileCardLarge extends StatelessWidget {
   final String? name;
   final String? distance;
   final String? productName;
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final isFavourite = userProvider.favourites.contains(name);
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: GestureDetector(
@@ -44,7 +48,7 @@ class FoodTileCardLarge extends StatelessWidget {
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10),
                       ),
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: Colors.black.withAlpha(30),
                       image: DecorationImage(image: CachedNetworkImageProvider(image ?? ''), fit: BoxFit.cover),
                     ),
                     child: Align(
@@ -53,17 +57,25 @@ class FoodTileCardLarge extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: <Widget>[
                           IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.favorite_outline_outlined,
-                                color: Colors.white70,
-                              )),
+                            onPressed: () {
+                              if (isFavourite) {
+                                userProvider.removeFavourite(name!);
+                              } else {
+                                userProvider.addFavourite(name!);
+                              }
+                            },
+                            icon: Icon(
+                              isFavourite ? Icons.favorite : Icons.favorite_outline_outlined,
+                              color: isFavourite ? Colors.red : Colors.white70,
+                            ),
+                          ),
                           IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.more_vert,
-                                color: Colors.white70,
-                              )),
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.more_vert,
+                              color: Colors.white70,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -82,26 +94,10 @@ class FoodTileCardLarge extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
                             ),
-                            // TODO: Add rating here
-                            // Row(
-                            //   children: <Widget>[
-                            //     Text(
-                            //       (Random().nextDouble() * 4 + 1).toStringAsFixed(1),
-                            //       style: AppStyles.getSemiBoldTextStyle(fontSize: 16, color: Colors.green.shade700),
-                            //     ),
-                            //     const SizedBox(width: 10),
-                            //     Icon(
-                            //       Icons.star,
-                            //       size: 14,
-                            //       color: Colors.green.shade700,
-                            //     ),
-                            //   ],
-                            // )
                           ],
                         ),
                         const SizedBox(height: 10),
                         Row(
-                          // mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             const Icon(Icons.timer_sharp, size: 15),
                             const SizedBox(width: 10),
@@ -110,26 +106,10 @@ class FoodTileCardLarge extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: AppStyles.getMediumTextStyle(
                                 fontSize: 15,
-                                // fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
                         ),
-                        // TODO: Add offer here
-                        // const SizedBox(height: 15),
-                        // Row(
-                        //   children: <Widget>[
-                        //     Image.asset('assets/images/offer.png', height: 15),
-                        //     const SizedBox(width: 10),
-                        //     Text(
-                        //       'Flat ${AppStrings.inrSymbol} 150 OFF above @300',
-                        //       style: AppStyles.getMediumTextStyle(
-                        //         fontSize: 13,
-                        //         color: AppColors.baseColor,
-                        //       ),
-                        //     ),
-                        //   ],
-                        // )
                       ],
                     ),
                   ),

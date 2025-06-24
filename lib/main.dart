@@ -9,13 +9,15 @@ import 'package:orado_customer/features/location/provider/location_provider.dart
 import 'package:orado_customer/features/location/provider/map_provider.dart';
 import 'package:orado_customer/features/location/provider/map_provider.dart';
 import 'package:orado_customer/features/merchants/provider/merchant_provider.dart';
+import 'package:orado_customer/features/profile/provider/profile_provider.dart';
 import 'package:orado_customer/features/splash/provider/splash_provider.dart';
 import 'package:orado_customer/features/splash/provider/splash_provider.dart';
+import 'package:orado_customer/features/user/presentation/favorites_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'features/auth/provider/auth_provider.dart';
 import 'features/auth/provider/login_provider.dart';
+import 'features/location/provider/address_provider.dart';
 import 'features/user/provider/user_provider.dart';
 import 'services/route_services.dart' as route;
 import 'utilities/utilities.dart';
@@ -59,7 +61,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return KeyedSubtree(
@@ -100,6 +101,10 @@ class _MyAppState extends State<MyApp> {
                   create: (_) => SplashProvider()),
               ChangeNotifierProvider<MapScreenProvider>(
                   create: (_) => MapScreenProvider()),
+              ChangeNotifierProvider<AddressProvider>(
+                  create: (_) => AddressProvider()),
+              ChangeNotifierProvider<ProfileProvider>(
+                  create: (_) => ProfileProvider()),
             ],
             child: child,
           );

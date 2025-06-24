@@ -4,6 +4,9 @@ class UserProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  List<String> _favourites = [];
+  List<String> get favourites => _favourites;
+  
   // UserModel? _userModel;
   // UserModel? get userModel => _userModel;
 
@@ -28,4 +31,16 @@ class UserProvider extends ChangeNotifier {
   //   // }
   //   putLoading(false);
   // }
+
+  void addFavourite(String item) {
+    if (!_favourites.contains(item)) {
+      _favourites.add(item);
+      notifyListeners();
+    }
+  }
+
+  void removeFavourite(String item) {
+    _favourites.remove(item);
+    notifyListeners();
+  }
 }

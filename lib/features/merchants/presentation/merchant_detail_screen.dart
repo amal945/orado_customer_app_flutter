@@ -7,6 +7,7 @@ import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/merchants/models/product_model.dart';
 import 'package:orado_customer/features/merchants/provider/merchant_provider.dart';
+import 'package:orado_customer/features/user/presentation/favorites_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../../utilities/common/custom_container.dart';
@@ -53,7 +54,9 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
         actions: <Widget>[
           InkWell(onTap: () {}, child: const Icon(Icons.search)),
           const SizedBox(width: 10),
-          InkWell(onTap: () {}, child: const Icon(Icons.favorite)),
+          InkWell(onTap: () {
+            context.pushNamed(FavoritesScreen.route);
+          }, child: const Icon(Icons.favorite)),
           const SizedBox(width: 10),
           InkWell(onTap: () {}, child: const Icon(Icons.share)),
           const SizedBox(width: 10),

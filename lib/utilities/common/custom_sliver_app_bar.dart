@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:orado_customer/features/location/presentation/address_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
+import 'package:orado_customer/features/profile/presentation/profile_screen.dart';
 import 'package:orado_customer/utilities/utilities.dart';
 
 import '../orado_icon_icons.dart';
@@ -28,7 +30,7 @@ class CustomSliverAppBar {
             ),
             const SizedBox(width: 10),
             IconButton(onPressed: (){
-              context.pushNamed(MapScreen.route);
+              context.pushNamed(AddressScreen.route);
             },icon: Icon(OradoIcon.vector, color: AppColors.baseColor, size: 10)),
             const SizedBox(width: 20),
           ],
@@ -37,7 +39,7 @@ class CustomSliverAppBar {
       actions: <Widget>[
         GestureDetector(
           onTap: () {
-
+            context.pushNamed(ProfileScreen.route);
           },
           child: Container(
             height: 60,

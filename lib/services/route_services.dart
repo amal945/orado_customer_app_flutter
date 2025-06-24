@@ -6,14 +6,13 @@ import 'package:orado_customer/features/auth/presentation/otp_screen.dart';
 import 'package:orado_customer/features/cart/presentation/cart_screen.dart';
 import 'package:orado_customer/features/cart/presentation/order_status_screen.dart';
 import 'package:orado_customer/features/home/presentation/home_screen.dart';
-// import 'package:orado_customer/features/location/presentation/address_screen.dart';
-// import 'package:orado_customer/features/location/presentation/address_screen.dart';
-// import 'package:orado_customer/features/location/presentation/address_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_listing_screen.dart';
+import 'package:orado_customer/features/profile/presentation/edit_profile_screen.dart';
+import 'package:orado_customer/features/profile/presentation/profile_screen.dart';
 import 'package:orado_customer/features/splash/presentation/splash_screen.dart';
 import 'package:orado_customer/features/user/presentation/favorites_screen.dart';
 import 'package:orado_customer/features/user/presentation/orders_screen.dart';
@@ -24,6 +23,7 @@ import '../features/auth/presentation/new_password.dart';
 import '../features/auth/presentation/reset_password.dart';
 import '../features/auth/presentation/sign_up_screen.dart';
 import '../features/auth/presentation/login_with_phone_number_screen.dart';
+import '../features/location/presentation/address_screen.dart';
 import '../features/no_internet_page.dart';
 import 'connectivity_service.dart';
 
@@ -184,6 +184,16 @@ final router = GoRouter(
             return getCustomTransition(state,
                 MerchantDetailScreen(id: state.uri.queryParameters['id']));
           },
+        ),
+        GoRoute(
+          path: ProfileScreen.route,
+          name: ProfileScreen.route,
+          builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: EditProfileScreen.route,
+          name: EditProfileScreen.route,
+          builder: (context, state) => const EditProfileScreen(),
         ),
       ],
     ),
