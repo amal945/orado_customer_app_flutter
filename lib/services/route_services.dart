@@ -133,12 +133,12 @@ final router = GoRouter(
             );
           },
         ),
-        // GoRoute(
-        //   path: AddressScreen.route,
-        //   name: AddressScreen.route,
-        //   pageBuilder: (context, state) =>
-        //       getCustomTransition(state, const AddressScreen()),
-        // ),
+        GoRoute(
+          path: AddressScreen.route,
+          name: AddressScreen.route,
+          pageBuilder: (context, state) =>
+              getCustomTransition(state, const AddressScreen()),
+        ),
         GoRoute(
           path: OrdersScreen.route,
           name: OrdersScreen.route,
