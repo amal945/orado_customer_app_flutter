@@ -64,7 +64,7 @@ class LocationProvider extends ChangeNotifier {
     if (_isRequestingLocation) return;
     _isRequestingLocation = true;
 
-    final stopwatch = Stopwatch()..start(); // Start the stopwatch
+    final stopwatch = Stopwatch()..start();
 
     Location location = Location();
     LocationData? currentLocation;
@@ -90,7 +90,7 @@ class LocationProvider extends ChangeNotifier {
 
       log("Fetching location...");
       currentLocation = await location.getLocation();
-      stopwatch.stop(); // Stop after fetching the location
+      stopwatch.stop();
 
       log("Location fetch time: ${stopwatch.elapsedMilliseconds} ms");
       log("Got location: ${currentLocation.latitude}, ${currentLocation.longitude}");

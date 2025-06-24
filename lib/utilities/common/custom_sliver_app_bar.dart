@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/location/presentation/address_screen.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
+import 'package:orado_customer/features/profile/presentation/profile_screen.dart';
 import 'package:orado_customer/utilities/utilities.dart';
 
 import '../orado_icon_icons.dart';
@@ -38,7 +39,7 @@ class CustomSliverAppBar {
       actions: <Widget>[
         GestureDetector(
           onTap: () {
-
+            context.pushNamed(ProfileScreen.route);
           },
           child: Container(
             height: 60,
