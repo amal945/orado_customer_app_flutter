@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:orado_customer/utilities/colors.dart';
+import 'package:orado_customer/utilities/common/custom_coloured_button.dart';
+import 'package:orado_customer/utilities/styles.dart';
 import 'package:provider/provider.dart';
 import '../provider/profile_provider.dart';
 
@@ -27,7 +31,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
+      appBar: AppBar(
+        title: Text(
+          'Edit Profile',
+          style:
+              AppStyles.getBoldTextStyle(fontSize: 22, color: AppColors.yellow),
+        ),
+        backgroundColor: AppColors.baseColor,
+        iconTheme: IconThemeData(color: AppColors.yellow, size: 24),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.yellow, size: 24),
+          onPressed: () {
+            context.pop();
+          },
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -35,44 +55,125 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: ListView(
             children: [
               TextFormField(
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  return null;
+                },
+                style: AppStyles.getRegularTextStyle(
+                    fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: name,
-                decoration: const InputDecoration(labelText: 'Name'),
                 onSaved: (v) => name = v ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  focusColor: AppColors.baseColor,
+                  labelStyle: AppStyles.getRegularTextStyle(
+                      fontSize: 16, color: AppColors.titleTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
               ),
+              SizedBox(height: 12),
               TextFormField(
+                style: AppStyles.getRegularTextStyle(
+                    fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: email,
-                decoration: const InputDecoration(labelText: 'Email'),
                 onSaved: (v) => email = v ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  focusColor: AppColors.baseColor,
+                  labelStyle: AppStyles.getRegularTextStyle(
+                      fontSize: 16, color: AppColors.titleTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
               ),
+              SizedBox(height: 12),
               TextFormField(
+                style: AppStyles.getRegularTextStyle(
+                    fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: phone,
-                decoration: const InputDecoration(labelText: 'Phone'),
+                keyboardType: TextInputType.phone,
                 onSaved: (v) => phone = v ?? '',
+                decoration: InputDecoration(
+                  labelText: 'Phone',
+                  focusColor: AppColors.baseColor,
+                  labelStyle: AppStyles.getRegularTextStyle(
+                      fontSize: 16, color: AppColors.titleTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
               ),
+              SizedBox(height: 12),
               TextFormField(
+                style: AppStyles.getRegularTextStyle(
+                    fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: address,
-                decoration: const InputDecoration(labelText: 'Address'),
+                decoration: InputDecoration(
+                  labelText: 'Address',
+                  focusColor: AppColors.baseColor,
+                  labelStyle: AppStyles.getRegularTextStyle(
+                      fontSize: 16, color: AppColors.titleTextColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: AppColors.baseColor, width: 2.0),
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
                 onSaved: (v) => address = v ?? '',
               ),
               const SizedBox(height: 32),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: Colors.grey.shade300,
-                ),
-                onPressed: () {
-                  _formKey.currentState?.save();
-                  context.read<ProfileProvider>().updateUserInfo(
-                        newName: name,
-                        newEmail: email,
-                        newPhone: phone,
-                        newAddress: address,
+              CustomColouredButton(
+                  onPressed: () async {
+                    if (_formKey.currentState?.validate() ?? false) {
+                      _formKey.currentState?.save();
+                      await context.read<ProfileProvider>().updateProfileOnApi(
+                            name: name,
+                            email: email,
+                            phone: phone,
+                            address: address,
+                          );
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Profile updated successfully!')),
                       );
-                  Navigator.pop(context);
-                },
-                child:
-                    const Text('Save', style: TextStyle(color: Colors.black)),
-              ),
+                    }
+                  },
+                  label: 'Update Profile',
+                  backGroundColor: AppColors.baseColor,
+                  foreGroundColor: AppColors.yellow,
+                  buttonHeight: 50),
             ],
           ),
         ),

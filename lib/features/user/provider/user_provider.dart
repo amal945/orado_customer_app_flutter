@@ -1,46 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:orado_customer/features/user/model/favourite_model.dart';
+import 'package:orado_customer/services/favourite_services.dart';
 
 class UserProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  List<String> _favourites = [];
-  List<String> get favourites => _favourites;
-  
-  // UserModel? _userModel;
-  // UserModel? get userModel => _userModel;
+  List<FavouriteItem> _favourites = [];
+  List<FavouriteItem> get favourites => _favourites;
 
-  putLoading(bool value) {
+  void putLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
-  // getUserData(BuildContext context) async {
-  //   putLoading(true);
-  //   // var data = await APIServices().getUserDetails();
-  //   // try {
-  //   //   if (data['status'] == 'Success') {
-  //   //     _userModel = UserModel.fromJson(data['data']);
-  //   //   } else {
-  //   //     showSnackBar(context: context, message: data['message'] ?? 'User not found', backgroundColor: Colors.red);
-  //   //   }
-  //   // } catch (e) {}
-  //   // if (fcmToken == null) {
-  //   //   fcmToken = await FirebaseMessaging.instance.getToken();
-  //   //   APIServices().sentFCMToken(fcmToken ?? '');
-  //   // }
-  //   putLoading(false);
-  // }
+  Future<void> fetchFavourites() async {
+    putLoading(true);
+    try {
+      final response = await FavouriteServices.getFavourites();
+      _favourites = response.data;
+      notifyListeners();
+    } catch (e) {
+      print("Error fetching favourites: $e");
+    }
+    putLoading(false);
+  }
 
-  void addFavourite(String item) {
-    if (!_favourites.contains(item)) {
+  Future<void> addFavourite(FavouriteItem item) async {
+    try {
+      if (item.id == null || isFavourite(item.id!)) return;
+      await FavouriteServices.addFavourite(restaurantId: item.id!);
       _favourites.add(item);
       notifyListeners();
+    } catch (e) {
+      print("Error adding favourite: $e");
     }
   }
 
-  void removeFavourite(String item) {
-    _favourites.remove(item);
-    notifyListeners();
+  Future<void> removeFavourite(String restaurantId) async {
+    try {
+      await FavouriteServices.removeFavourite(restaurantId: restaurantId);
+      _favourites.removeWhere((fav) => fav.id == restaurantId);
+      notifyListeners();
+    } catch (e) {
+      print("Error removing favourite: $e");
+    }
+  }
+
+  bool isFavourite(String restaurantId) {
+    return _favourites.any((fav) => fav.id == restaurantId);
   }
 }

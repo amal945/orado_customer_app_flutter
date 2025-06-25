@@ -5,9 +5,17 @@ import 'package:orado_customer/utilities/common/custom_bottom_nav.dart';
 import '../../features/home/presentation/home_screen.dart';
 
 class ScaffoldBuilder extends StatefulWidget {
-  const ScaffoldBuilder({super.key, required this.route, required this.body});
+  const ScaffoldBuilder({
+    super.key,
+    required this.route,
+    required this.body,
+    this.appBar,
+  });
+
   final String route;
   final Widget body;
+  final PreferredSizeWidget? appBar;
+
   @override
   State<ScaffoldBuilder> createState() => _ScaffoldBuilderState();
 }
@@ -24,6 +32,7 @@ class _ScaffoldBuilderState extends State<ScaffoldBuilder> {
         }
       },
       child: Scaffold(
+        appBar: widget.appBar,
         extendBody: true,
         extendBodyBehindAppBar: true,
         backgroundColor: Colors.grey.shade100,

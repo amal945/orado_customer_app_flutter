@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
+import 'package:orado_customer/features/user/model/favourite_model.dart';
 import 'package:orado_customer/features/user/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -25,13 +26,18 @@ class FoodTileCardLarge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final isFavourite = userProvider.favourites.contains(name);
+    final isFavourite = merchantId != null && userProvider.isFavourite(merchantId!);
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: GestureDetector(
         onTap: () {
-          context.pushNamed(MerchantDetailScreen.route, queryParameters: <String, String>{'id': merchantId!});
+          if (merchantId != null) {
+            context.pushNamed(
+              MerchantDetailScreen.route,
+              queryParameters: <String, String>{'id': merchantId!},
+            );
+          }
         },
         child: Card(
           elevation: 4,
@@ -49,7 +55,10 @@ class FoodTileCardLarge extends StatelessWidget {
                         topRight: Radius.circular(10),
                       ),
                       color: Colors.black.withAlpha(30),
-                      image: DecorationImage(image: CachedNetworkImageProvider(image ?? ''), fit: BoxFit.cover),
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(image ?? ''),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     child: Align(
                       alignment: Alignment.topRight,
@@ -58,10 +67,17 @@ class FoodTileCardLarge extends StatelessWidget {
                         children: <Widget>[
                           IconButton(
                             onPressed: () {
+                              if (merchantId == null) return;
                               if (isFavourite) {
-                                userProvider.removeFavourite(name!);
+                                userProvider.removeFavourite(merchantId!);
                               } else {
-                                userProvider.addFavourite(name!);
+                                userProvider.addFavourite(
+                                  FavouriteItem(
+                                    id: merchantId,
+                                    name: name,
+                                    images: image != null ? [image!] : [],
+                                  ),
+                                );
                               }
                             },
                             icon: Icon(
@@ -90,7 +106,7 @@ class FoodTileCardLarge extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Text(
-                              name!,
+                              name ?? '',
                               textAlign: TextAlign.center,
                               style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
                             ),
