@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:orado_customer/utilities/common/loading_widget.dart';
 import 'package:provider/provider.dart';
@@ -160,30 +161,43 @@ class _AddressScreenState extends State<AddressScreen> {
                           itemCount: addressProvider.addresses.length,
                           itemBuilder: (_, index) {
                             final data = addressProvider.addresses[index];
-                            return ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Icon(
-                                addressIcons[
-                                    data.type?.toLowerCase() ?? "other"],
-                                color: Colors.grey[800],
-                              ),
-                              title: Text(
-                                data.displayName ?? "",
-                                style: AppStyles.getBoldTextStyle(fontSize: 15),
-                              ),
-                              subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 4.0),
-                                child: Text(
-                                  "${data.street}, ${data.city}, ${data.state}",
-                                  style: AppStyles.getSemiBoldTextStyle(
-                                      fontSize: 15, color: Colors.grey),
+                            return GestureDetector(
+                              onTap: () {
+                                final latlng = LatLng(data.location!.latitude!,
+                                    data.location!.longitude!);
+                                context
+                                    .read<AddressProvider>()
+                                    .setLatLongAddress(
+                                        context: context,
+                                        latlng: latlng,
+                                        address: data.addressString!);
+                              },
+                              child: ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(
+                                  addressIcons[
+                                      data.type?.toLowerCase() ?? "other"],
+                                  color: Colors.grey[800],
                                 ),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.more_vert),
-                                onPressed: () {
-                                  showAddressBottomSheet(context, data);
-                                },
+                                title: Text(
+                                  data.displayName ?? "",
+                                  style:
+                                      AppStyles.getBoldTextStyle(fontSize: 15),
+                                ),
+                                subtitle: Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: Text(
+                                    "${data.street}, ${data.city}, ${data.state}",
+                                    style: AppStyles.getSemiBoldTextStyle(
+                                        fontSize: 15, color: Colors.grey),
+                                  ),
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.more_vert),
+                                  onPressed: () {
+                                    showAddressBottomSheet(context, data);
+                                  },
+                                ),
                               ),
                             );
                           },
@@ -281,10 +295,10 @@ class _AddressScreenState extends State<AddressScreen> {
                   const Divider(height: 1),
                   InkWell(
                     onTap: () {
-                      Navigator.pop(context);
-                      showDeleteConfirmationDialog(context, onDelete: () {
-                        // Your delete logic here
-                        debugPrint("Item deleted");
+                      showDeleteConfirmationDialog(context, onDelete: () async {
+                        await context.read<AddressProvider>().deleteAddress(
+                            context: context, restaurantId: data.addressId!);
+                        Navigator.pop(context);
                       },
                           message:
                               "Are you sure you want to delete this address");
