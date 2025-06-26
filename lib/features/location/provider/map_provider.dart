@@ -20,6 +20,10 @@ class MapScreenProvider extends ChangeNotifier {
 
   bool get isHomeSelected => _selectedTag == 'Home';
 
+  bool _isEdit = false;
+
+  bool get isEdit => _isEdit;
+
   void selectTag(String tag) {
     if (_selectedTag != tag) {
       _selectedTag = tag;
@@ -28,8 +32,9 @@ class MapScreenProvider extends ChangeNotifier {
   }
 
   void setValues(Addresses address) {
+    _isEdit = true;
     houseController.text = address.displayName ?? "";
-    areaController.text = address.area ?? "";
+    areaController.text = address.street ?? "";
     directionController.text = address.directionsToReach ?? "";
     receiverNameController.text = address.receiverName ?? "";
     receiverPhoneController.text = address.receiverPhone ?? '';
@@ -54,6 +59,7 @@ class MapScreenProvider extends ChangeNotifier {
     directionController.clear();
     receiverNameController.clear();
     receiverPhoneController.clear();
+    _isEdit = false;
   }
 
   Future<void> addAddress(BuildContext context, LatLng latlng) async {
@@ -92,6 +98,53 @@ class MapScreenProvider extends ChangeNotifier {
 
       if (response.messageType != null && response.messageType == "success") {
         // context.read<AddressProvider>().getAllAddress();
+        context.goNamed(AddressScreen.route);
+        showSnackBar(context,
+            message: response.message!, backgroundColor: Colors.green);
+      }
+      clearFields();
+    } else {
+      showSnackBar(context,
+          message: "Failed to fetch Address", backgroundColor: Colors.red);
+    }
+  }
+
+  Future<void> updateAddress(
+      BuildContext context, LatLng latlng, String addressId) async {
+    if (houseController.text.trim().isEmpty ||
+        areaController.text.trim().isEmpty) {
+      showSnackBar(context,
+          message: "Please fil mandatory fields", backgroundColor: Colors.red);
+      return;
+    }
+
+    List<Placemark> placemarks =
+        await placemarkFromCoordinates(latlng.latitude, latlng.longitude);
+    if (placemarks.isNotEmpty) {
+      final place = placemarks.first;
+      final currentLocationAddress =
+          '${place.name}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
+      final selectedType =
+          selectedTag == "Friends and Family" ? "FriendAndFamily" : selectedTag;
+      final requestBody = {
+        "type": selectedType,
+        "receiverName": receiverNameController.text.trim(),
+        "receiverPhone": receiverPhoneController.text.trim(),
+        "area": areaController.text.trim(),
+        "directionsToReach": directionController.text.trim(),
+        "displayName": houseController.text.trim(),
+        "street": place.street,
+        "city": place.locality,
+        "state": place.administrativeArea,
+        "zip": place.postalCode,
+        "longitude": latlng.longitude,
+        "latitude": latlng.latitude
+      };
+
+      final response = await AddressServices.updateAddress(
+          requestBody: requestBody, addressId: addressId);
+
+      if (response.messageType != null && response.messageType == "success") {
         context.goNamed(AddressScreen.route);
         showSnackBar(context,
             message: response.message!, backgroundColor: Colors.green);

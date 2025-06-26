@@ -161,10 +161,10 @@ class _AddressScreenState extends State<AddressScreen> {
                           itemCount: addressProvider.addresses.length,
                           itemBuilder: (_, index) {
                             final data = addressProvider.addresses[index];
+                            final latlng = LatLng(data.location!.latitude!,
+                                data.location!.longitude!);
                             return GestureDetector(
                               onTap: () {
-                                final latlng = LatLng(data.location!.latitude!,
-                                    data.location!.longitude!);
                                 context
                                     .read<AddressProvider>()
                                     .setLatLongAddress(
@@ -195,7 +195,8 @@ class _AddressScreenState extends State<AddressScreen> {
                                 trailing: IconButton(
                                   icon: const Icon(Icons.more_vert),
                                   onPressed: () {
-                                    showAddressBottomSheet(context, data);
+                                    showAddressBottomSheet(
+                                        context, data, latlng);
                                   },
                                 ),
                               ),
@@ -227,7 +228,8 @@ class _AddressScreenState extends State<AddressScreen> {
     );
   }
 
-  void showAddressBottomSheet(BuildContext context, Addresses data) {
+  void showAddressBottomSheet(
+      BuildContext context, Addresses data, LatLng latlng) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -275,7 +277,16 @@ class _AddressScreenState extends State<AddressScreen> {
                   InkWell(
                     onTap: () {
                       Navigator.pop(context);
-                      // TODO: Handle Edit
+                      context.pushNamed(
+                        MapScreen.route,
+                        extra: {
+                          'lat': latlng.latitude.toString(),
+                          'long': latlng.longitude.toString(),
+                          'address': 'Bangalore, India',
+                          'currentAddress': data,
+                          // <- Your `Addresses` instance
+                        },
+                      );
                     },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(

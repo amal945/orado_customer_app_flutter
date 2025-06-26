@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
+import 'package:orado_customer/features/merchants/models/menu_data_model.dart';
 import 'package:orado_customer/utilities/debouncer.dart';
 import 'package:provider/provider.dart';
 
@@ -14,14 +15,17 @@ class FoodsListingCard extends StatefulWidget {
     required this.products,
     required this.merchantId,
   });
-  final List<ProductModel> products;
+
+  final List<MenuItem> products;
   final String merchantId;
+
   @override
   State<FoodsListingCard> createState() => _FoodsListingCardState();
 }
 
 class _FoodsListingCardState extends State<FoodsListingCard> {
-  late List<int?> quantities = List<int?>.generate(widget.products.length, (int index) => null);
+  late List<int?> quantities =
+      List<int?>.generate(widget.products.length, (int index) => null);
   Debouncer deboucer = Debouncer(delay: const Duration(milliseconds: 700));
 
   @override
@@ -44,17 +48,17 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (BuildContext context, int index) {
-              final Product? product = widget.products[index].product;
+              final product = widget.products[index];
               bool isInCart = false;
               CartItemModel? cartItem;
-              try {
-                cartItem = provider.cart.cartItems!.firstWhere(
-                  (CartItemModel e) => e.productId == product!.productId,
-                );
-                isInCart = provider.cart.cartItems!.any(
-                  (CartItemModel e) => e.productId == product!.productId,
-                );
-              } catch (e) {}
+              // try {
+              //   cartItem = provider.cart.cartItems!.firstWhere(
+              //     (CartItemModel e) => e.productId == product!.productId,
+              //   );
+              //   isInCart = provider.cart.cartItems!.any(
+              //     (CartItemModel e) => e.productId == product!.productId,
+              //   );
+              // } catch (e) {}
               return SizedBox(
                 height: 200,
                 child: Row(
@@ -67,17 +71,22 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              product!.productName!,
+                              product.name!,
                               style: AppStyles.getBoldTextStyle(fontSize: 15),
                             ),
                             const SizedBox(height: 10),
                             Row(
                               children: <Widget>[
-                                Icon(Icons.star, size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star, size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star, size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star, size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star, size: 16, color: Colors.green.shade800),
+                                Icon(Icons.star,
+                                    size: 16, color: Colors.green.shade800),
+                                Icon(Icons.star,
+                                    size: 16, color: Colors.green.shade800),
+                                Icon(Icons.star,
+                                    size: 16, color: Colors.green.shade800),
+                                Icon(Icons.star,
+                                    size: 16, color: Colors.green.shade800),
+                                Icon(Icons.star,
+                                    size: 16, color: Colors.green.shade800),
                                 const SizedBox(width: 4),
                                 Text(
                                   '83 ratings',
@@ -90,7 +99,8 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                             const SizedBox(height: 10),
                             Text(
                               '${AppStrings.inrSymbol}${product.price}',
-                              style: AppStyles.getRegularTextStyle(fontSize: 20),
+                              style:
+                                  AppStyles.getRegularTextStyle(fontSize: 20),
                             )
                           ],
                         ),
@@ -103,12 +113,14 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                           Container(
                             margin: const EdgeInsets.symmetric(vertical: 18),
                             clipBehavior: Clip.hardEdge,
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: AppColors.greycolor),
-                            child: product.productstablerelation8!.isEmpty
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: AppColors.greycolor),
+                            child: product.images.isEmpty
                                 ? null
                                 : CachedNetworkImage(
                                     fit: BoxFit.cover,
-                                    imageUrl: product.productstablerelation8!.first.imageRelation2!.imageName!,
+                                    imageUrl: product.images.first,
                                   ),
                           ),
                           Align(
@@ -122,23 +134,36 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                               ),
                               child: isInCart
                                   ? Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
                                         const SizedBox(width: 5),
                                         GestureDetector(
                                           onTap: () {
                                             if (cartItem!.quantity! > 1) {
-                                              setState(() => cartItem!.quantity = cartItem.quantity! - 1);
+                                              setState(() =>
+                                                  cartItem!.quantity =
+                                                      cartItem.quantity! - 1);
                                             }
                                             deboucer.debounce(() {
                                               if (cartItem!.quantity! < 1) {
-                                                provider.deleteFromCart(context, itemId: cartItem.cartId.toString());
+                                                provider.deleteFromCart(context,
+                                                    itemId: cartItem.cartId
+                                                        .toString());
                                               } else {
-                                                provider.updateItemInCart(context, itemId: cartItem.cartId.toString(), quantity: cartItem.quantity!);
+                                                provider.updateItemInCart(
+                                                    context,
+                                                    itemId: cartItem.cartId
+                                                        .toString(),
+                                                    quantity:
+                                                        cartItem.quantity!);
                                               }
                                             });
                                           },
-                                          child: const Icon(size: 19, Icons.remove, color: Colors.white),
+                                          child: const Icon(
+                                              size: 19,
+                                              Icons.remove,
+                                              color: Colors.white),
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
@@ -151,9 +176,16 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                                         const SizedBox(width: 8),
                                         GestureDetector(
                                             onTap: () {
-                                              setState(() => cartItem!.quantity = cartItem.quantity! + 1);
+                                              setState(() =>
+                                                  cartItem!.quantity =
+                                                      cartItem.quantity! + 1);
                                               deboucer.debounce(() {
-                                                provider.updateItemInCart(context, itemId: cartItem!.cartId.toString(), quantity: cartItem.quantity!);
+                                                provider.updateItemInCart(
+                                                    context,
+                                                    itemId: cartItem!.cartId
+                                                        .toString(),
+                                                    quantity:
+                                                        cartItem.quantity!);
                                               });
                                             },
                                             child: const Icon(
@@ -169,12 +201,12 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                                           backgroundColor: AppColors.baseColor,
                                           foregroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
                                           )),
-                                      onPressed: () {
-                                        provider.addToCart(context, productId: product.productId.toString(), merchantId: widget.merchantId, quantity: 1);
-                                      },
-                                      icon: const Icon(Icons.add, color: Colors.white),
+                                      onPressed: () {},
+                                      icon: const Icon(Icons.add,
+                                          color: Colors.white),
                                       label: const Text('Add'),
                                     ),
                             ),

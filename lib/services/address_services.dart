@@ -67,7 +67,8 @@ class AddressServices {
     }
   }
 
- static Future<GlobalResponseModel> addAddress({required Map<String, dynamic> requestBody}) async {
+  static Future<GlobalResponseModel> addAddress(
+      {required Map<String, dynamic> requestBody}) async {
     try {
       final token = await LocationProvider.getToken();
 
@@ -81,6 +82,39 @@ class AddressServices {
           'Content-Type': 'application/json',
         },
       );
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+
+        final data = GlobalResponseModel.fromJson(json);
+
+        return data;
+      } else {
+        final json = jsonDecode(response.body);
+        final data = GlobalResponseModel.fromJson(json);
+
+        return data;
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  static Future<GlobalResponseModel> updateAddress(
+      {required Map<String, dynamic> requestBody,
+      required String addressId}) async {
+    try {
+      final token = await LocationProvider.getToken();
+      final url = Uri.parse("${Urls.baserUrl}user/address/$addressId");
+
+      final response = await http.put(
+        url,
+        body: jsonEncode(requestBody),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
 

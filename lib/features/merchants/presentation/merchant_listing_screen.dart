@@ -21,17 +21,6 @@ class _MerchantListingScreenState extends State<MerchantListingScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<MerchantProvider>().viewAllProducts(
-          context,
-          long: 12,
-          lat: 10,
-          limit: 10,
-          page: 1,
-          searchQuery: widget.searchQuery,
-          categoryId: widget.categoryId,
-          subCategoryId: widget.subCategoryId,
-          merchantId: widget.merchantId,
-        ));
   }
 
   @override

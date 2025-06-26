@@ -121,18 +121,20 @@ final router = GoRouter(
           path: MapScreen.route,
           name: MapScreen.route,
           pageBuilder: (context, state) {
-            final args = state.extra as Map<String, String>?;
+            final args = state.extra as Map<String, dynamic>?;
 
             return getCustomTransition(
               state,
               MapScreen(
-                lat: args?['lat'],
-                long: args?['long'],
-                address: args?['address'],
+                lat: args?['lat'] as String?,
+                long: args?['long'] as String?,
+                address: args?['address'] as String?,
+                currentAddress: args?['currentAddress'] as Addresses?,
               ),
             );
           },
         ),
+
         GoRoute(
           path: AddressScreen.route,
           name: AddressScreen.route,
