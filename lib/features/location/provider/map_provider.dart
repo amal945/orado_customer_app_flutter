@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:orado_customer/features/location/models/address_response_model.dart';
 import 'package:orado_customer/features/location/presentation/address_screen.dart';
 import 'package:orado_customer/features/location/provider/address_provider.dart';
 import 'package:orado_customer/services/address_services.dart';
@@ -26,7 +27,17 @@ class MapScreenProvider extends ChangeNotifier {
     }
   }
 
+  void setValues(Addresses address) {
+    houseController.text = address.displayName ?? "";
+    areaController.text = address.area ?? "";
+    directionController.text = address.directionsToReach ?? "";
+    receiverNameController.text = address.receiverName ?? "";
+    receiverPhoneController.text = address.receiverPhone ?? '';
+    notifyListeners();
+  }
+
   final formKey = GlobalKey<FormState>();
+
   // Address fields
   final TextEditingController houseController = TextEditingController();
   final TextEditingController areaController = TextEditingController();
