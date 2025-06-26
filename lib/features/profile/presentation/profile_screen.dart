@@ -17,11 +17,13 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-    @override
+  @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<ProfileProvider>().fetchAndUpdateProfile());
+    Future.microtask(
+        () => context.read<ProfileProvider>().fetchAndUpdateProfile());
   }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<ProfileProvider>();
@@ -127,8 +129,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ListTile(
                   minVerticalPadding: 20,
                   onTap: () {},
-                  leading: Icon(Icons.settings, color: AppColors.baseColor),
-                  title: Text('Settings',
+                  leading: Icon(Icons.privacy_tip_outlined,
+                      color: AppColors.baseColor),
+                  title: Text('Privacy Policy',
+                      style: AppStyles.getBoldTextStyle(fontSize: 20)),
+                  trailing: Icon(Icons.arrow_forward_ios,
+                      color: AppColors.baseColor, size: 16),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  minVerticalPadding: 20,
+                  onTap: () {},
+                  leading: Icon(Icons.support_agent_outlined,
+                      color: AppColors.baseColor),
+                  title: Text('Support',
                       style: AppStyles.getBoldTextStyle(fontSize: 20)),
                   trailing: Icon(Icons.arrow_forward_ios,
                       color: AppColors.baseColor, size: 16),

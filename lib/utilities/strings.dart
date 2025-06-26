@@ -243,4 +243,11 @@ class AppStrings {
     }
     return null;
   }
+
+  static String? validateAddress(String? address) {
+    if (address!.isEmpty) {
+      return 'Enter a valid address';
+    }
+    return null;
+  }
 }

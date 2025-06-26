@@ -60,11 +60,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             itemCount: userProvider.favourites.length,
             itemBuilder: (context, index) {
               final item = userProvider.favourites[index];
-              return FoodTileCardLarge(
+              return CustomRestaurantTile(
                 merchantId: item.id,
                 image: item.images.isNotEmpty ? item.images.first : '',
                 name: item.name,
-                productName: item.name,
               );
             },
           );

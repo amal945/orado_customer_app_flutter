@@ -5,7 +5,6 @@ import 'package:orado_customer/features/merchants/presentation/merchant_detail_s
 import 'package:orado_customer/features/user/model/favourite_model.dart';
 import 'package:orado_customer/features/user/provider/user_provider.dart';
 import 'package:provider/provider.dart';
-
 import '../utilities.dart';
 
 class FoodTileCardLarge extends StatelessWidget {
@@ -17,6 +16,7 @@ class FoodTileCardLarge extends StatelessWidget {
     this.merchantId,
     this.productName,
   });
+
   final String? merchantId;
   final String? image;
   final String? name;
@@ -25,116 +25,121 @@ class FoodTileCardLarge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-    final isFavourite = merchantId != null && userProvider.isFavourite(merchantId!);
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, _) {
+        final isFavourite =
+            merchantId != null && userProvider.isFavourite(merchantId!);
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: GestureDetector(
-        onTap: () {
-          if (merchantId != null) {
-            context.pushNamed(
-              MerchantDetailScreen.route,
-              queryParameters: <String, String>{'id': merchantId!},
-            );
-          }
-        },
-        child: Card(
-          elevation: 4,
-          surfaceTintColor: Colors.white,
-          child: Stack(
-            children: <Widget>[
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GestureDetector(
+            onTap: () {
+              if (merchantId != null) {
+                context.pushNamed(
+                  MerchantDetailScreen.route,
+                  queryParameters: <String, String>{'id': merchantId!},
+                );
+              }
+            },
+            child: Card(
+              elevation: 4,
+              surfaceTintColor: Colors.white,
+              child: Stack(
                 children: <Widget>[
-                  Container(
-                    height: 220,
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
-                      ),
-                      color: Colors.black.withAlpha(30),
-                      image: DecorationImage(
-                        image: CachedNetworkImageProvider(image ?? ''),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          IconButton(
-                            onPressed: () {
-                              if (merchantId == null) return;
-                              if (isFavourite) {
-                                userProvider.removeFavourite(merchantId!);
-                              } else {
-                                userProvider.addFavourite(
-                                  FavouriteItem(
-                                    id: merchantId,
-                                    name: name,
-                                    images: image != null ? [image!] : [],
-                                  ),
-                                );
-                              }
-                            },
-                            icon: Icon(
-                              isFavourite ? Icons.favorite : Icons.favorite_outline_outlined,
-                              color: isFavourite ? Colors.red : Colors.white70,
-                            ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        height: 220,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(10),
+                            topRight: Radius.circular(10),
                           ),
-                          IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.more_vert,
-                              color: Colors.white70,
-                            ),
+                          color: Colors.black.withAlpha(30),
+                          image: DecorationImage(
+                            image: CachedNetworkImageProvider(image ?? ''),
+                            fit: BoxFit.cover,
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            Text(
-                              name ?? '',
-                              textAlign: TextAlign.center,
-                              style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
-                            ),
-                          ],
                         ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: <Widget>[
-                            const Icon(Icons.timer_sharp, size: 15),
-                            const SizedBox(width: 10),
-                            Text(
-                              '22 mins . ${distance ?? 0} KM',
-                              textAlign: TextAlign.center,
-                              style: AppStyles.getMediumTextStyle(
-                                fontSize: 15,
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              IconButton(
+                                onPressed: () {
+                                  if (merchantId == null) return;
+                                  if (isFavourite) {
+                                    userProvider.removeFavourite(merchantId!);
+                                  } else {
+                                    userProvider.addFavourite(
+                                      FavouriteItem(
+                                        id: merchantId!,
+                                        name: productName ?? name ?? '',
+                                        images: [image ?? ''],
+                                      ),
+                                    );
+                                  }
+                                },
+                                icon: Icon(
+                                  isFavourite
+                                      ? Icons.favorite
+                                      : Icons.favorite_outline_outlined,
+                                  color: isFavourite ? Colors.red : Colors.white70,
+                                ),
                               ),
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.more_vert,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Text(
+                                  name ?? '',
+                                  textAlign: TextAlign.center,
+                                  style:
+                                      AppStyles.getSemiBoldTextStyle(fontSize: 17),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: <Widget>[
+                                const Icon(Icons.timer_sharp, size: 15),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '22 mins . ${distance ?? 0} KM',
+                                  textAlign: TextAlign.center,
+                                  style: AppStyles.getMediumTextStyle(fontSize: 15),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

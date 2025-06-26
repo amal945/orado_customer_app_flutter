@@ -1,73 +1,142 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
+import 'package:orado_customer/features/user/model/favourite_model.dart';
+import 'package:orado_customer/features/user/provider/user_provider.dart';
+import 'package:provider/provider.dart';
+import '../utilities.dart';
 
-class RestaurantTile extends StatelessWidget {
-  String? name;
-  String? rating;
-  String? foodType;
-  String? distance;
-  String? imageUrl;
-  bool? isClosed;
-
-   RestaurantTile({
+class CustomRestaurantTile extends StatelessWidget {
+  const CustomRestaurantTile({
     super.key,
-     this.name,
-     this.rating,
-     this.foodType,
-     this.distance,
-     this.imageUrl,
-     this.isClosed,
+    this.image,
+    this.name,
+    this.distance,
+    this.merchantId,
   });
+  final String? merchantId;
+  final String? image;
+  final String? name;
+  final String? distance;
+
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
-            boxShadow: [BoxShadow(blurRadius: 4, color: Colors.grey.shade300)],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Stack(
-                  children: [
-                    Image.network(
-                      imageUrl!,
-                      height: 140,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Icon(Icons.favorite_border, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
 
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const SizedBox(height: 4),
-                    Text('$foodType • $distance', style: TextStyle(color: Colors.grey[700])),
-                    const SizedBox(height: 4),
-                    Text('⭐ $rating', style: const TextStyle(fontWeight: FontWeight.w500)),
-                  ],
-                ),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: GestureDetector(
+        onTap: () {
+          if (merchantId != null) {
+            context.pushNamed(
+              MerchantDetailScreen.route,
+              queryParameters: <String, String>{'id': merchantId!},
+            );
+          }
+        },
+        child: Card(
+          elevation: 4,
+          surfaceTintColor: Colors.white,
+          child: Stack(
+            children: <Widget>[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    height: 220,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10),
+                      ),
+                      color: Colors.black.withAlpha(30),
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(image ?? ''),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: <Widget>[
+                          Builder(
+                            builder: (BuildContext context) {
+                              final userProvider = context.watch<UserProvider>();
+                              final isFavourite = merchantId != null
+                                  ? userProvider.isFavourite(merchantId!)
+                                  : false;
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.black45,
+                                  child: IconButton(
+                                    onPressed: () {
+                                      if (merchantId != null) {
+                                        if (isFavourite) {
+                                          userProvider.removeFavourite(merchantId!);
+                                        } else {
+                                          userProvider.addFavourite(FavouriteItem(
+                                            id: merchantId!,
+                                            name: name ?? '',
+                                            images: image != null ? [image!] : <String>[],
+                                          ));
+                                        }
+                                      }
+                                    },
+                                    icon: Icon(
+                                      isFavourite ? Icons.favorite : Icons.favorite_outline_outlined,
+                                      color: isFavourite ? Colors.red : Colors.white70,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text(
+                              name ?? '',
+                              textAlign: TextAlign.center,
+                              style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: <Widget>[
+                            const Icon(Icons.timer_sharp, size: 15),
+                            const SizedBox(width: 10),
+                            Text(
+                              '22 mins . ${distance ?? 0} KM',
+                              textAlign: TextAlign.center,
+                              style: AppStyles.getMediumTextStyle(
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
