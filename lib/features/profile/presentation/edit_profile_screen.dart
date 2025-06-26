@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/utilities/colors.dart';
 import 'package:orado_customer/utilities/common/custom_coloured_button.dart';
+import 'package:orado_customer/utilities/strings.dart';
 import 'package:orado_customer/utilities/styles.dart';
 import 'package:provider/provider.dart';
 import '../provider/profile_provider.dart';
@@ -55,12 +56,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: ListView(
             children: [
               TextFormField(
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
+                keyboardType: TextInputType.name,
+                validator: (String? text) => AppStrings.validateName(text),
                 style: AppStyles.getRegularTextStyle(
                     fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: name,
@@ -84,6 +81,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 12),
               TextFormField(
+                validator: (String? text) => AppStrings.validateEmail(text),
+                keyboardType: TextInputType.emailAddress,
                 style: AppStyles.getRegularTextStyle(
                     fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: email,
@@ -107,6 +106,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 12),
               TextFormField(
+                validator: (String? text) => AppStrings.validatePhone(text),
                 style: AppStyles.getRegularTextStyle(
                     fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: phone,
@@ -131,6 +131,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               SizedBox(height: 12),
               TextFormField(
+                validator: (String? text) => AppStrings.validateAddress(text),
+                keyboardType: TextInputType.streetAddress,
                 style: AppStyles.getRegularTextStyle(
                     fontSize: 16, color: AppColors.titleTextColor),
                 initialValue: address,

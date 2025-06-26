@@ -31,7 +31,8 @@ class FavouriteServices {
     }
   }
 
-  static Future<void> addFavourite({required String restaurantId}) async {
+  static Future<FavouriteListResponse> addFavourite(
+      {required String restaurantId}) async {
     try {
       final token = await LocationProvider.getToken();
       final url = Uri.parse(Urls.addfavourite);
@@ -43,10 +44,15 @@ class FavouriteServices {
         },
         body: jsonEncode({'restaurantId': restaurantId}),
       );
-      if (response.statusCode != 200 && response.statusCode != 201) {
+
+      final json = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return FavouriteListResponse.fromJson(json);
+      } else {
         print('Failed to add favourite. Status: ${response.statusCode}');
         print('Response body: ${response.body}');
-        throw Exception("Failed to add favourite");
+        return FavouriteListResponse.fromJson(json);
       }
     } catch (e) {
       print("Exception in addFavourite: $e");
@@ -54,25 +60,30 @@ class FavouriteServices {
     }
   }
 
-  static Future<void> removeFavourite({required String restaurantId}) async {
-    try {
-      final token = await LocationProvider.getToken();
-      final url = Uri.parse('${Urls.removeFavourite}/$restaurantId');
-      final response = await http.delete(
-        url,
-        headers: {
-          ...APIServices.headers,
-          'Authorization': 'Bearer $token',
-        },
-      );
-      if (response.statusCode != 200 && response.statusCode != 204) {
-        print('Failed to remove favourite. Status: ${response.statusCode}');
-        print('Response body: ${response.body}');
-        throw Exception("Failed to remove favourite");
-      }
-    } catch (e) {
-      print("Exception in removeFavourite: $e");
-      rethrow;
+static Future<FavouriteListResponse> removeFavourite({required String restaurantId}) async {
+  try {
+    final token = await LocationProvider.getToken();
+    final url = Uri.parse('${Urls.removeFavourite}/$restaurantId');
+    final response = await http.delete(
+      url,
+      headers: {
+        ...APIServices.headers,
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final json = jsonDecode(response.body);
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return FavouriteListResponse.fromJson(json);
+    } else {
+      print('Failed to remove favourite. Status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      return FavouriteListResponse.fromJson(json);
     }
+  } catch (e) {
+    print("Exception in removeFavourite: $e");
+    rethrow;
   }
+}
 }
