@@ -10,7 +10,6 @@ import 'package:provider/provider.dart';
 
 import '../../../utilities/common/scaffold_builder.dart';
 
-
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
   static String route = 'favorites';
@@ -24,9 +23,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return ScaffoldBuilder(
       route: FavoritesScreen.route,
       appBar: AppBar(
-        title: Text('Favourites',
-            style: AppStyles.getBoldTextStyle(
-                fontSize: 22, color: AppColors.yellow)),
+        title: Text(
+          'Favourites',
+          style:
+              AppStyles.getBoldTextStyle(fontSize: 22, color: AppColors.yellow),
+        ),
         backgroundColor: AppColors.baseColor,
         centerTitle: true,
         leading: IconButton(

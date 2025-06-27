@@ -105,6 +105,8 @@ class _MyAppState extends State<MyApp> {
                   create: (_) => AddressProvider()),
               ChangeNotifierProvider<ProfileProvider>(
                   create: (_) => ProfileProvider()),
+              ChangeNotifierProvider<ProfileProvider>(
+                  create: (_) => ProfileProvider()),
             ],
             child: child,
           );

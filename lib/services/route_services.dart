@@ -13,6 +13,7 @@ import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_listing_screen.dart';
 import 'package:orado_customer/features/profile/presentation/edit_profile_screen.dart';
+import 'package:orado_customer/features/profile/presentation/order_history.dart';
 import 'package:orado_customer/features/profile/presentation/profile_screen.dart';
 import 'package:orado_customer/features/splash/presentation/splash_screen.dart';
 import 'package:orado_customer/features/user/presentation/favorites_screen.dart';
@@ -196,6 +197,11 @@ final router = GoRouter(
           name: EditProfileScreen.route,
           builder: (context, state) => const EditProfileScreen(),
         ),
+        GoRoute(
+          path: OrderHistory.route,
+          name: OrderHistory.route,
+          builder: (context, state) => const OrderHistory(),
+        ),
       ],
     ),
   ],
@@ -227,4 +233,3 @@ Page<dynamic> getCustomTransition(GoRouterState state, Widget child) {
     },
   );
 }
-
