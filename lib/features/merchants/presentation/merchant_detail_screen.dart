@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:orado_customer/features/cart/models/cart_model.dart' hide Productstablerelation1;
+import 'package:orado_customer/features/cart/models/cart_model.dart'
+    hide Productstablerelation1;
 import 'package:orado_customer/features/cart/presentation/cart_screen.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/merchants/models/product_model.dart';
 import 'package:orado_customer/features/merchants/provider/merchant_provider.dart';
-import 'package:orado_customer/features/user/presentation/favorites_screen.dart';
 import 'package:provider/provider.dart';
 
 import '../../../utilities/common/custom_container.dart';
@@ -15,10 +15,10 @@ import '../../../utilities/common/food_listing_card.dart';
 import '../../../utilities/utilities.dart';
 
 class MerchantDetailScreen extends StatefulWidget {
-  const MerchantDetailScreen({super.key, this.id, this.searchQuery});
+  const MerchantDetailScreen({super.key, this.id});
+
   static String route = 'merchant-details';
   final String? id;
-  final String? searchQuery;
 
   @override
   State<MerchantDetailScreen> createState() => _MerchantDetailScreenState();
@@ -34,8 +34,10 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<MerchantProvider>();
-      final locProvider = context.read<LocationProvider>();
+      context.read<MerchantProvider>().getMerchantDetails(
+          restaurantId: widget.id!,
+          latlng: context.read<LocationProvider>().currentLocationLatLng!);
+      context.read<MerchantProvider>().getMenu(restaurantId: widget.id!);
     });
   }
 
@@ -54,15 +56,43 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
         actions: <Widget>[
           InkWell(onTap: () {}, child: const Icon(Icons.search)),
           const SizedBox(width: 10),
-          InkWell(onTap: () {
-            context.pushNamed(FavoritesScreen.route);
-          }, child: const Icon(Icons.favorite)),
+          InkWell(onTap: () {}, child: const Icon(Icons.favorite)),
           const SizedBox(width: 10),
           InkWell(onTap: () {}, child: const Icon(Icons.share)),
           const SizedBox(width: 10),
           InkWell(onTap: () {}, child: const Icon(Icons.more_vert_sharp)),
         ],
       ),
+      // body: Center(
+      //   child: Column(
+      //     mainAxisAlignment: MainAxisAlignment.center,
+      //     crossAxisAlignment: CrossAxisAlignment.center,
+      //     children: [
+      //       Text("Merchant Details Screen"),
+      //       ElevatedButton(
+      //           style: ButtonStyle(
+      //             backgroundColor: WidgetStateProperty.all<Color>(Colors.red),
+      //           ),
+      //           onPressed: () async {
+      //             await context.read<MerchantProvider>().getMerchantDetails(
+      //                 restaurantId: widget.id!,
+      //                 latlng: context
+      //                     .read<LocationProvider>()
+      //                     .currentLocationLatLng!);
+      //
+      //             await context
+      //                 .read<MerchantProvider>()
+      //                 .getMenu(restaurantId: widget.id!);
+      //           },
+      //           child: Text(
+      //             "Try Again",
+      //             style: AppStyles.getBoldTextStyle(
+      //                 fontSize: 14, color: Colors.white),
+      //           ))
+      //     ],
+      //   ),
+      // ),
+
       body: CustomScrollView(
         controller: scrollController,
         shrinkWrap: true,
@@ -74,30 +104,17 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
               );
             }
 
-            if (provider.merchantProducts[widget.id] == null) {
+            if (provider.menuItems.isEmpty ||
+                provider.merchantDetails.isEmpty) {
               return SliverFillRemaining(
                 child: Center(
                   child: Text("Error"),
                 ),
               );
             }
-
-            final allProducts = provider.merchantProducts[widget.id]!;
-            final filteredProducts = (widget.searchQuery != null && widget.searchQuery!.isNotEmpty)
-                ? allProducts.where((product) {
-                    final nameMatch = (product.product?.productName ?? '')
-                        .toLowerCase()
-                        .contains(widget.searchQuery!.toLowerCase());
-                    // Replace 'foodType' with the correct property or remove this filter if not needed.
-                    // Example: If you want to filter only by product name, remove cuisineMatch.
-                    return nameMatch;
-                  }).toList()
-                : allProducts;
-
-            final Productstablerelation1? merchant = filteredProducts.isNotEmpty
-                ? filteredProducts.first.product!.productstablerelation1
-                : allProducts.first.product!.productstablerelation1;
             // final Productstablerelation1? merchant = provider.merchantProducts[widget.id]!.first.product!.productstablerelation1;
+
+            final data = provider.merchantDetails.first;
             return SliverList(
               delegate: SliverChildListDelegate(
                 <Widget>[
@@ -107,15 +124,17 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                         height: MediaQuery.sizeOf(context).height / 2.5,
                         width: MediaQuery.sizeOf(context).width,
                         child: CachedNetworkImage(
-                          imageUrl: merchant?.merchantImage?.imageName ?? '',
+                          imageUrl: data.data.image ?? '',
                           fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Icon(Icons.image),
+                          errorWidget: (context, url, error) =>
+                              Icon(Icons.image),
                         ),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          SizedBox(height: MediaQuery.sizeOf(context).height / 3.5),
+                          SizedBox(
+                              height: MediaQuery.sizeOf(context).height / 3.5),
                           Stack(
                             children: <Widget>[
                               Column(
@@ -132,12 +151,13 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                         color: Colors.white,
                                       ),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: <Widget>[
                                           const SizedBox(height: 30),
                                           Center(
                                             child: Text(
-                                              merchant?.shopName ?? '',
+                                              data.data.name ?? '',
                                               style: AppStyles.getBoldTextStyle(
                                                 fontSize: 24,
                                               ),
@@ -146,8 +166,10 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           const SizedBox(height: 5),
                                           Center(
                                             child: Text(
-                                              merchant?.address ?? '',
-                                              style: AppStyles.getMediumTextStyle(fontSize: 12),
+                                              data.data.address.street ?? '',
+                                              style:
+                                                  AppStyles.getMediumTextStyle(
+                                                      fontSize: 12),
                                             ),
                                           ),
                                           const SizedBox(height: 5),
@@ -157,12 +179,17 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                                   //! context.pushNamed(AppPaths.reviewScreen);
                                                 },
                                                 child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
                                                   children: <Widget>[
                                                     Text(
-                                                      '3.33',
-                                                      style: AppStyles.getBoldTextStyle(
-                                                        color: Colors.green.shade600,
+                                                      data.data.rating
+                                                              .toString() ??
+                                                          "",
+                                                      style: AppStyles
+                                                          .getBoldTextStyle(
+                                                        color: Colors
+                                                            .green.shade600,
                                                         fontSize: 16,
                                                       ),
                                                     ),
@@ -170,22 +197,29 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                                     Icon(
                                                       Icons.star,
                                                       size: 12,
-                                                      color: Colors.green.shade600,
+                                                      color:
+                                                          Colors.green.shade600,
                                                     ),
                                                     const SizedBox(width: 5),
-                                                    Text('81 ratings', style: AppStyles.getRegularTextStyle(fontSize: 12)),
+                                                    Text('81 ratings',
+                                                        style: AppStyles
+                                                            .getRegularTextStyle(
+                                                                fontSize: 12)),
                                                   ],
                                                 )),
                                           ),
                                           const SizedBox(height: 5),
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: <Widget>[
-                                              const Icon(Icons.timer_outlined, size: 14),
+                                              const Icon(Icons.timer_outlined,
+                                                  size: 14),
                                               const SizedBox(width: 5),
                                               Text(
-                                                '22 mins . ${provider.merchantProducts[widget.id]!.first.distance!.toStringAsFixed(2)} | ${merchant?.displayAddress}',
-                                                style: AppStyles.getMediumTextStyle(
+                                                '${data.data.estimatedDeliveryTime} mins . ${data.data.distanceKm}',
+                                                style: AppStyles
+                                                    .getMediumTextStyle(
                                                   fontSize: 15,
                                                 ),
                                               ),
@@ -235,21 +269,20 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           ),
                                           const SizedBox(height: 20),
                                           Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 20),
                                             child: Text(
                                               'Recommended',
-                                              style: AppStyles.getSemiBoldTextStyle(
+                                              style: AppStyles
+                                                  .getSemiBoldTextStyle(
                                                 fontSize: 22,
                                               ),
                                             ),
                                           ),
                                           const SizedBox(height: 20),
-                                          // FoodsListingCard(products: provider.merchantProducts[widget.id]!, merchantId: widget.id!),
-                                          // --- Show filtered products if searchQuery is present ---
                                           FoodsListingCard(
-                                            products: filteredProducts,
-                                            merchantId: widget.id!,
-                                          ),
+                                              products: provider.menuItems,
+                                              merchantId: widget.id!),
                                           const SizedBox(height: 30),
                                           // Align(
                                           //   alignment: Alignment.centerLeft,
@@ -293,40 +326,40 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           }),
         ],
       ),
-      bottomNavigationBar: Consumer<CartProvider>(
-        builder: (context, provider, _) {
-          if (provider.cart.cartItems != null &&
-              provider.cart.cartItems!.isNotEmpty &&
-              provider.cart.cartItems!.firstWhere((e) => e.merchantId.toString() == widget.id, orElse: () => CartItemModel(cartId: -1)).cartId != -1) {
-            return GestureDetector(
-              onTap: () {
-                context.pushNamed(CartScreen.route);
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 600),
-                color: AppColors.baseColor,
-                height: 80,
-                width: MediaQuery.sizeOf(context).width,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      '${provider.cart.cartItems!.length} Item added >',
-                      style: AppStyles.getSemiBoldTextStyle(fontSize: 15, color: Colors.white),
-                    ),
-                    // const SizedBox(height: 5),
-                    // Text(
-                    //   'Add items worth ${AppStrings.inrSymbol}1000 more to get free delivery',
-                    //   style: AppStyles.getMediumTextStyle(fontSize: 16, color: Colors.white),
-                    // ),
-                  ],
-                ),
-              ),
-            );
-          }
-          return SizedBox();
-        },
-      ),
+      // bottomNavigationBar: Consumer<CartProvider>(
+      //   builder: (context, provider, _) {
+      //     if (provider.cart.cartItems != null &&
+      //         provider.cart.cartItems!.isNotEmpty &&
+      //         provider.cart.cartItems!.firstWhere((e) => e.merchantId.toString() == widget.id, orElse: () => CartItemModel(cartId: -1)).cartId != -1) {
+      //       return GestureDetector(
+      //         onTap: () {
+      //           context.pushNamed(CartScreen.route);
+      //         },
+      //         child: AnimatedContainer(
+      //           duration: const Duration(milliseconds: 600),
+      //           color: AppColors.baseColor,
+      //           height: 80,
+      //           width: MediaQuery.sizeOf(context).width,
+      //           child: Column(
+      //             mainAxisAlignment: MainAxisAlignment.center,
+      //             children: <Widget>[
+      //               Text(
+      //                 '${provider.cart.cartItems!.length} Item added >',
+      //                 style: AppStyles.getSemiBoldTextStyle(fontSize: 15, color: Colors.white),
+      //               ),
+      //               // const SizedBox(height: 5),
+      //               // Text(
+      //               //   'Add items worth ${AppStrings.inrSymbol}1000 more to get free delivery',
+      //               //   style: AppStyles.getMediumTextStyle(fontSize: 16, color: Colors.white),
+      //               // ),
+      //             ],
+      //           ),
+      //         ),
+      //       );
+      //     }
+      //     return SizedBox();
+      //   },
+      // ),
     );
   }
 }

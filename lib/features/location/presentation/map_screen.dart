@@ -16,7 +16,9 @@ class MapScreen extends StatefulWidget {
   final String? long;
   final String? address;
   final Addresses? currentAddress;
-  const MapScreen({super.key, this.lat, this.long, this.address , this.currentAddress});
+
+  const MapScreen(
+      {super.key, this.lat, this.long, this.address, this.currentAddress});
 
   static const String route = 'map-screen';
 
@@ -33,13 +35,17 @@ class _MapScreenState extends State<MapScreen> {
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (widget.lat == null && widget.long == null && widget.address == null) {
-     await   context.read<LocationProvider>().getCurrentLocation(context);
+        await context.read<LocationProvider>().getCurrentLocation(context);
       } else {
-      await  context.read<LocationProvider>().setLatLongAndAddress(
+        await context.read<LocationProvider>().setLatLongAndAddress(
               latitude: double.parse(widget.lat!),
               longitude: double.parse(widget.long!),
               address: null,
             );
+      }
+
+      if (widget.currentAddress != null) {
+        context.read<MapScreenProvider>().setValues(widget.currentAddress!);
       }
 
       _onLocationChanged(
@@ -116,8 +122,6 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   void _showAddressFormSheet(String address) {
-
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -147,7 +151,8 @@ class _MapScreenState extends State<MapScreen> {
                           Expanded(
                             child: Text(
                               address,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -165,7 +170,9 @@ class _MapScreenState extends State<MapScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Required' : null,
+                            value == null || value.trim().isEmpty
+                                ? 'Required'
+                                : null,
                       ),
                       const SizedBox(height: 10),
                       TextFormField(
@@ -175,7 +182,9 @@ class _MapScreenState extends State<MapScreen> {
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) =>
-                        value == null || value.trim().isEmpty ? 'Required' : null,
+                            value == null || value.trim().isEmpty
+                                ? 'Required'
+                                : null,
                       ),
                       const SizedBox(height: 10),
                       TextField(
@@ -224,7 +233,9 @@ class _MapScreenState extends State<MapScreen> {
                             border: OutlineInputBorder(),
                           ),
                           validator: (value) =>
-                          value == null || value.trim().isEmpty ? 'Required' : null,
+                              value == null || value.trim().isEmpty
+                                  ? 'Required'
+                                  : null,
                         ),
                         const SizedBox(height: 10),
                         TextFormField(
@@ -235,11 +246,11 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                           keyboardType: TextInputType.phone,
                           validator: (value) =>
-                          value == null || value.trim().isEmpty
-                              ? 'Required'
-                              : (value.length < 10
-                              ? 'Invalid phone number'
-                              : null),
+                              value == null || value.trim().isEmpty
+                                  ? 'Required'
+                                  : (value.length < 10
+                                      ? 'Invalid phone number'
+                                      : null),
                         ),
                         const SizedBox(height: 10),
                       ],
@@ -253,11 +264,22 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                           onPressed: () async {
                             if (provider.formKey.currentState!.validate()) {
-                              await provider.addAddress(
-                                  Navigator.of(context).context, _selectedLatLng!);
+                              if (provider.isEdit) {
+                                await provider.updateAddress(
+                                    context,
+                                    _selectedLatLng!,
+                                    widget.currentAddress!.addressId!);
+                              } else {
+                                await provider.addAddress(
+                                    Navigator.of(context).context,
+                                    _selectedLatLng!);
+                              }
                             }
                           },
-                          child: Text("SAVE ADDRESS",
+                          child: Text(
+                              provider.isEdit
+                                  ? "UPDATE ADDRESS"
+                                  : "SAVE ADDRESS",
                               style: AppStyles.getBoldTextStyle(
                                   fontSize: 14, color: Colors.white)),
                         ),
@@ -273,7 +295,6 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
