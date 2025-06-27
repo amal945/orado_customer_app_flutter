@@ -8,8 +8,11 @@ import 'package:orado_customer/utilities/utilities.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../utilities/common/logout_confirm_dialogue_box.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
   static const String route = 'profile';
 
   @override
@@ -150,11 +153,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Divider(height: 1),
                 ListTile(
                   minVerticalPadding: 20,
-                  onTap: () async {
-                    final sharedPreferences =
-                        await SharedPreferences.getInstance();
-                    await sharedPreferences.clear();
-                    context.goNamed(GetStartedScreen.route);
+                  onTap: ()  {
+                    showLogoutConfirmationDialog(
+                      context,
+                      onLogout: () async {
+                        final sharedPreferences =
+                            await SharedPreferences.getInstance();
+                        await sharedPreferences.clear();
+                        context.goNamed(GetStartedScreen.route);
+                      },
+                    );
                   },
                   leading: Icon(Icons.logout, color: AppColors.baseColor),
                   title: Text('Logout',

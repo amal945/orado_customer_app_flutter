@@ -1,38 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
-import 'package:orado_customer/features/merchants/models/menu_data_model.dart';
-import 'package:orado_customer/utilities/debouncer.dart';
+import 'package:orado_customer/features/merchants/provider/merchant_provider.dart';
 import 'package:provider/provider.dart';
 
-import '../../features/cart/models/cart_model.dart';
-import '../../features/merchants/models/product_model.dart';
-import '../utilities.dart';
+import '../../features/merchants/models/menu_data_model.dart';
 
-class FoodsListingCard extends StatefulWidget {
-  const FoodsListingCard({
-    super.key,
-    required this.products,
-    required this.merchantId,
-  });
+class FoodsListingCard extends StatelessWidget {
+  List<MenuItem> items;
+  String restaurantId;
 
-  final List<MenuItem> products;
-  final String merchantId;
-
-  @override
-  State<FoodsListingCard> createState() => _FoodsListingCardState();
-}
-
-class _FoodsListingCardState extends State<FoodsListingCard> {
-  late List<int?> quantities =
-      List<int?>.generate(widget.products.length, (int index) => null);
-  Debouncer deboucer = Debouncer(delay: const Duration(milliseconds: 700));
-
-  @override
-  void initState() {
-    super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) => context.read<CartBloc>().add(CartInitialEvent()));
-  }
+  FoodsListingCard(
+      {super.key, required this.items, required this.restaurantId});
 
   @override
   Widget build(BuildContext context) {
@@ -43,22 +22,29 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
         child: Padding(
           padding: const EdgeInsets.all(18.0),
           child: ListView.separated(
-            itemCount: widget.products.length,
+            itemCount: items.length,
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (BuildContext context, int index) {
-              final product = widget.products[index];
-              bool isInCart = false;
-              CartItemModel? cartItem;
-              // try {
-              //   cartItem = provider.cart.cartItems!.firstWhere(
-              //     (CartItemModel e) => e.productId == product!.productId,
-              //   );
-              //   isInCart = provider.cart.cartItems!.any(
-              //     (CartItemModel e) => e.productId == product!.productId,
-              //   );
-              // } catch (e) {}
+              final product = items[index];
+              final bool isInCart = provider.cartItems
+                  .any((data) => data.productId == product.id);
+
+              var quantity = 0;
+
+              if (isInCart) {
+                // Find the cart item matching the product and get its quantity
+                final cartItem = provider.cartItems.firstWhere(
+                      (data) => data.productId == product.id,
+                );
+
+                if (cartItem != null) {
+                  quantity = cartItem.quantity ??
+                      0; // assuming quantity can be nullable
+                }
+              }
+
               return SizedBox(
                 height: 200,
                 child: Row(
@@ -71,36 +57,34 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              product.name!,
-                              style: AppStyles.getBoldTextStyle(fontSize: 15),
+                              product.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Row(
                               children: <Widget>[
-                                Icon(Icons.star,
-                                    size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star,
-                                    size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star,
-                                    size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star,
-                                    size: 16, color: Colors.green.shade800),
-                                Icon(Icons.star,
-                                    size: 16, color: Colors.green.shade800),
+                                for (int i = 0; i < 5; i++)
+                                  Icon(Icons.star,
+                                      size: 16, color: Colors.green.shade800),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '83 ratings',
-                                  style: AppStyles.getMediumTextStyle(
+                                  '${product.rating} ratings',
+                                  style: const TextStyle(
                                     fontSize: 13,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                )
+                                ),
                               ],
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              '${AppStrings.inrSymbol}${product.price}',
-                              style:
-                                  AppStyles.getRegularTextStyle(fontSize: 20),
+                              '₹${product.price}',
+                              style: const TextStyle(
+                                fontSize: 20,
+                              ),
                             )
                           ],
                         ),
@@ -114,14 +98,19 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                             margin: const EdgeInsets.symmetric(vertical: 18),
                             clipBehavior: Clip.hardEdge,
                             decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: AppColors.greycolor),
-                            child: product.images.isEmpty
-                                ? null
-                                : CachedNetworkImage(
-                                    fit: BoxFit.cover,
-                                    imageUrl: product.images.first,
-                                  ),
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.grey.shade300,
+                            ),
+                            child: CachedNetworkImage(
+                              fit: BoxFit.cover,
+                              imageUrl: product.images.isNotEmpty
+                                  ? product.images.first
+                                  : 'https://via.placeholder.com/150',
+                              placeholder: (context, url) => const Center(
+                                  child: CircularProgressIndicator()),
+                              errorWidget: (context, url, error) =>
+                              const Icon(Icons.error),
+                            ),
                           ),
                           Align(
                             alignment: Alignment.bottomCenter,
@@ -130,85 +119,79 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                               width: 100,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(10),
-                                color: AppColors.baseColor,
+                                color: Colors.orange.shade700,
                               ),
-                              child: isInCart
-                                  ? Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        const SizedBox(width: 5),
-                                        GestureDetector(
-                                          onTap: () {
-                                            if (cartItem!.quantity! > 1) {
-                                              setState(() =>
-                                                  cartItem!.quantity =
-                                                      cartItem.quantity! - 1);
-                                            }
-                                            deboucer.debounce(() {
-                                              if (cartItem!.quantity! < 1) {
-                                                provider.deleteFromCart(context,
-                                                    itemId: cartItem.cartId
-                                                        .toString());
-                                              } else {
-                                                provider.updateItemInCart(
-                                                    context,
-                                                    itemId: cartItem.cartId
-                                                        .toString(),
-                                                    quantity:
-                                                        cartItem.quantity!);
-                                              }
-                                            });
-                                          },
-                                          child: const Icon(
-                                              size: 19,
-                                              Icons.remove,
-                                              color: Colors.white),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          cartItem!.quantity.toString(),
-                                          style: AppStyles.getSemiBoldTextStyle(
-                                            fontSize: 15,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        GestureDetector(
-                                            onTap: () {
-                                              setState(() =>
-                                                  cartItem!.quantity =
-                                                      cartItem.quantity! + 1);
-                                              deboucer.debounce(() {
-                                                provider.updateItemInCart(
-                                                    context,
-                                                    itemId: cartItem!.cartId
-                                                        .toString(),
-                                                    quantity:
-                                                        cartItem.quantity!);
-                                              });
-                                            },
-                                            child: const Icon(
-                                              Icons.add,
-                                              color: Colors.white,
-                                              size: 19,
-                                            )),
-                                        const SizedBox(width: 5),
-                                      ],
-                                    )
-                                  : ElevatedButton.icon(
-                                      style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.baseColor,
-                                          foregroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          )),
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.add,
-                                          color: Colors.white),
-                                      label: const Text('Add'),
+                              child: Builder(builder: (context) {
+                                return isInCart
+                                    ? Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    const SizedBox(width: 5),
+                                    GestureDetector(
+                                      onTap: provider.isLoading
+                                          ? null
+                                          : () {
+                                        provider.addToCart(
+                                            restaurantId:
+                                            restaurantId,
+                                            productId: product.id,
+                                            quantity: quantity - 1);
+                                        quantity--;
+                                      },
+                                      child: const Icon(Icons.remove,
+                                          size: 19, color: Colors.white),
                                     ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '$quantity',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: provider.isLoading
+                                          ? null
+                                          : () {
+                                        provider.addToCart(
+                                            restaurantId:
+                                            restaurantId,
+                                            productId: product.id,
+                                            quantity: quantity + 1);
+                                        quantity++;
+                                      },
+                                      child: const Icon(Icons.add,
+                                          size: 19, color: Colors.white),
+                                    ),
+                                    const SizedBox(width: 5),
+                                  ],
+                                )
+                                    : ElevatedButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                    Colors.orange.shade700,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                      BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  onPressed: provider.isLoading
+                                      ? null
+                                      : () {
+                                    provider.addToCart(
+                                        restaurantId: restaurantId,
+                                        productId: product.id,
+                                        quantity: 1);
+                                  },
+                                  icon: const Icon(Icons.add,
+                                      color: Colors.white),
+                                  label: const Text('Add'),
+                                );
+                              }),
                             ),
                           ),
                         ],
@@ -218,9 +201,8 @@ class _FoodsListingCardState extends State<FoodsListingCard> {
                 ),
               );
             },
-            separatorBuilder: (BuildContext context, int index) {
-              return const Divider();
-            },
+            separatorBuilder: (BuildContext context, int index) =>
+            const Divider(),
           ),
         ),
       );

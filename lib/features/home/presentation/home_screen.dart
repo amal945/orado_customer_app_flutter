@@ -29,6 +29,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int categoryIndex = 0;
   String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -176,17 +177,7 @@ class _HomeState extends State<Home> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(
-                                height: 15,
-                              ),
-                              ElevatedButton(
-                                  onPressed: () async {
-                                    SharedPreferences sharedPreferences =
-                                        await SharedPreferences.getInstance();
-                                    sharedPreferences.clear();
-                                    context.goNamed(GetStartedScreen.route);
-                                  },
-                                  child: Text("Log Out")),
+
                               const SizedBox(height: 30),
                               provider.categoriesData.isNotEmpty &&
                                       provider.categoriesData.first.data

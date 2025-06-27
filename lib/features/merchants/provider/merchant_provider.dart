@@ -43,6 +43,7 @@ class MerchantProvider extends ChangeNotifier {
   List<MerchantDetailModel> merchantDetails = [];
 
   List<MenuItem> menuItems = [];
+  List<MenuItem> filteredMenuItems = [];
 
   Future<void> getMerchantDetails(
       {required String restaurantId, required LatLng latlng}) async {

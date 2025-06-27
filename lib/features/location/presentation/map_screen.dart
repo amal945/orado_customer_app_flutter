@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:geocoding/geocoding.dart';
@@ -300,12 +301,13 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: AppColors.baseColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back,color: Colors.white,),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text("Select delivery location",
-            style: AppStyles.getBoldTextStyle(fontSize: 15)),
+            style: AppStyles.getBoldTextStyle(fontSize: 15,color: Colors.white)),
         centerTitle: true,
       ),
       body: Consumer<LocationProvider>(
@@ -337,7 +339,14 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                 },
                 onTap: _onLocationChanged,
-                onMapCreated: (controller) => _mapController = controller,
+                onMapCreated: (controller) async {
+                  _mapController = controller;
+
+                  // Load custom map style from assets
+                  String style = await rootBundle.loadString('assets/map_style.json');
+                  _mapController?.setMapStyle(style);
+                },
+
               ),
               Positioned(
                 left: 20,

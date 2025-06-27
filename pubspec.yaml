@@ -69,6 +69,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/map_style.json
 
   fonts:
     - family: Raleway

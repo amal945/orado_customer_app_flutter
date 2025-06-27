@@ -19,7 +19,9 @@ import '../../../utilities/utilities.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
+
   static String route = 'cart';
+
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
@@ -40,7 +42,7 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => context.read<CartProvider>().getCart(context));
+    // WidgetsBinding.instance.addPostFrameCallback((_) => context.read<CartProvider>().getCart(context));
   }
 
   @override
@@ -85,7 +87,9 @@ class _CartScreenState extends State<CartScreen> {
                               Icon(Icons.keyboard_arrow_up_outlined),
                             ],
                           ),
-                          Text(paymentMethod == 0 ? 'Razorpay' : 'Cash on Delivery'),
+                          Text(paymentMethod == 0
+                              ? 'Razorpay'
+                              : 'Cash on Delivery'),
                         ],
                       ),
                     ),
@@ -99,25 +103,25 @@ class _CartScreenState extends State<CartScreen> {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () async {
-                        var locationProvider = context.read<LocationProvider>();
-                        var userProvider = context.read<UserProvider>();
-                        var body = {
-                          "cartId": [provider.cart.cartItems?.first.cartId],
-                          "merchantId": provider.cart.cartItems?.first.merchantId.toString(),
-                          "paymentMethod": "cash",
-                          "tipAmount": 0,
-                          "deliveryMode": 0,
-                          "merchantInstruction": cookingInstruction.text,
-                          "deliveryInstruction": deliveryInstruction.text,
-                          "couponCode": "",
-                          "longitude": locationProvider.currentLocationLatLng?.longitude.toString(),
-                          "latitude": locationProvider.currentLocationLatLng?.latitude.toString(),
-                          "address": locationProvider.currentLocationAddress,
-                        };
-                        var success = await provider.buyFromCart(context, data: body);
-                        if (success) {
-                          context.pushNamed(OrderStatusScreen.route);
-                        }
+                        // var locationProvider = context.read<LocationProvider>();
+                        // var userProvider = context.read<UserProvider>();
+                        // var body = {
+                        //   "cartId": [provider.cart.cartItems?.first.cartId],
+                        //   "merchantId": provider.cart.cartItems?.first.merchantId.toString(),
+                        //   "paymentMethod": "cash",
+                        //   "tipAmount": 0,
+                        //   "deliveryMode": 0,
+                        //   "merchantInstruction": cookingInstruction.text,
+                        //   "deliveryInstruction": deliveryInstruction.text,
+                        //   "couponCode": "",
+                        //   "longitude": locationProvider.currentLocationLatLng?.longitude.toString(),
+                        //   "latitude": locationProvider.currentLocationLatLng?.latitude.toString(),
+                        //   "address": locationProvider.currentLocationAddress,
+                        // };
+                        // var success = await provider.buyFromCart(context, data: body);
+                        // if (success) {
+                        //   context.pushNamed(OrderStatusScreen.route);
+                        // }
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -127,7 +131,8 @@ class _CartScreenState extends State<CartScreen> {
                                 children: <Widget>[
                                   Column(
                                     children: <Widget>[
-                                      Text('${AppStrings.inrSymbol}${provider.cart.totalCost}'),
+                                      // Text('${AppStrings.inrSymbol}${provider.cart.totalCost}'),
+                                      Text("total cost"),
                                       const Text('Total'),
                                     ],
                                   ),
@@ -144,12 +149,12 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ),
         children: <Widget>[
-          ...provider.cart.cartItems!.map(
+          ...provider.cartItems!.map(
             (item) => ListTile(
               tileColor: AppColors.baseColor.withValues(alpha: 0.3),
               style: ListTileStyle.list,
               title: Text(
-                item.cartproductrelation!.productName!,
+                item.name!,
                 style: AppStyles.getMediumTextStyle(
                   fontSize: 14,
                 ),
@@ -160,13 +165,14 @@ class _CartScreenState extends State<CartScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     image: DecorationImage(
-                      image: CachedNetworkImageProvider(item.cartproductrelation!.productstablerelation8!.first.imageRelation2!.imageName!),
+                      image: CachedNetworkImageProvider(item.images!.first!),
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
               ),
-              subtitle: Text('${AppStrings.inrSymbol}${item.cartproductrelation!.price}', style: AppStyles.getBoldTextStyle(fontSize: 14)),
+              subtitle: Text('${AppStrings.inrSymbol}${item.price}',
+                  style: AppStyles.getBoldTextStyle(fontSize: 14)),
               trailing: Container(
                 height: 35,
                 width: 85,
@@ -185,28 +191,31 @@ class _CartScreenState extends State<CartScreen> {
                         }
                         deboucer.debounce(() {
                           if (item.quantity! < 1) {
-                            provider.deleteFromCart(context, itemId: item.cartId.toString());
+                            // provider.deleteFromCart(context, itemId: item.cartId.toString());
                           } else {
-                            provider.updateItemInCart(context, itemId: item.cartId.toString(), quantity: item.quantity!);
+                            // provider.updateItemInCart(context, itemId: item.cartId.toString(), quantity: item.quantity!);
                           }
                         });
                       },
-                      child: const Icon(size: 16, Icons.remove, color: Colors.white),
+                      child: const Icon(
+                          size: 16, Icons.remove, color: Colors.white),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       item.quantity.toString(),
-                      style: AppStyles.getMediumTextStyle(fontSize: 13, color: Colors.white),
+                      style: AppStyles.getMediumTextStyle(
+                          fontSize: 13, color: Colors.white),
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () {
                         setState(() => item.quantity = item.quantity! + 1);
                         deboucer.debounce(() {
-                          provider.updateItemInCart(context, itemId: item.cartId.toString(), quantity: item.quantity!);
+                          // provider.updateItemInCart(context, itemId: item.cartId.toString(), quantity: item.quantity!);
                         });
                       },
-                      child: const Icon(Icons.add, color: Colors.white, size: 16),
+                      child:
+                          const Icon(Icons.add, color: Colors.white, size: 16),
                     ),
                     const SizedBox(width: 5),
                   ],
@@ -267,7 +276,7 @@ class _CartScreenState extends State<CartScreen> {
                       const Icon(Icons.alarm, size: 17),
                       const SizedBox(width: 10),
                       Text(
-                        provider.cart.alldata?.error ?? 'Delivery in ${provider.cart.alldata?.duration?.ceil()} mins',
+                        'Delivery in  mins',
                         style: AppStyles.getMediumTextStyle(fontSize: 12),
                       ),
                     ],
@@ -292,7 +301,8 @@ class _CartScreenState extends State<CartScreen> {
                       style: AppStyles.getMediumTextStyle(fontSize: 13),
                     ),
                     subtitle: Text(
-                      context.read<LocationProvider>().currentLocationAddress ?? '',
+                      context.read<LocationProvider>().currentLocationAddress ??
+                          '',
                       style: AppStyles.getMediumTextStyle(fontSize: 13),
                     ),
                   ),
@@ -338,9 +348,10 @@ class _CartScreenState extends State<CartScreen> {
                   ListTile(
                     dense: true,
                     visualDensity: VisualDensity.compact,
-                    onTap: () => onTapTotalBill(context, provider),
+                    // onTap: () => onTapTotalBill(context, provider),
                     leading: const Icon(OradoIcon.orders),
-                    title: Text('Total Bill ${AppStrings.inrSymbol}${provider.cart.totalCost}'),
+                    title: Text(
+                        'Total Bill ${AppStrings.inrSymbol}${provider.cartItems.length}'),
                     subtitle: const Text('Including All Taxes'),
                     trailing: Icon(
                       Icons.keyboard_arrow_right,
@@ -357,48 +368,56 @@ class _CartScreenState extends State<CartScreen> {
     });
   }
 
-  void onTapTotalBill(BuildContext context, CartProvider provider) {
-    double itemTotal = 0;
-    for (var i in provider.cart.cartItems!) {
-      itemTotal += i.cartproductrelation!.price! * i.quantity!;
-    }
-    print(itemTotal);
-    CustomDialogue().showCustomDialogue(
-      context: context,
-      content: <Widget>[
-        Text(
-          'Bill Summary',
-          style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
-        ),
-        const SizedBox(
-          height: 14,
-        ),
-        Card(
-            color: Colors.grey.shade50,
-            surfaceTintColor: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.all(18.0),
-              child: Column(children: <Widget>[
-                buidItems(title: 'Item total', amt: itemTotal.toStringAsFixed(2)),
-                ...provider.cart.alldata!.taxes!.map(
-                  (e) => buidItems(title: e.tax!.first.taxName!, amt: e.tax!.first.taxAmount!.toStringAsFixed(2)),
-                ),
-                buidItems(title: 'Delivery partner fee', amt: provider.cart.alldata!.deliveryCharge!.toStringAsFixed(2), subtitle: 'goes to them for their time and effort'),
-                const Divider(),
-                ListTile(
-                  dense: true,
-                  horizontalTitleGap: 2,
-                  title: Text('Grand Total', style: AppStyles.getSemiBoldTextStyle(fontSize: 13)),
-                  trailing: Text(
-                    '${AppStrings.inrSymbol}${provider.cart.totalCost!.toStringAsFixed(2)}',
-                    style: AppStyles.getMediumTextStyle(fontSize: 13),
-                  ),
-                )
-              ]),
-            ))
-      ],
-    );
-  }
+  // void onTapTotalBill(BuildContext context, CartProvider provider) {
+  //   double itemTotal = 0;
+  //   for (var item in provider.cartItems!) {
+  //     itemTotal += item.price! * item.quantity!;
+  //   }
+  //   print(itemTotal);
+  //   CustomDialogue().showCustomDialogue(
+  //     context: context,
+  //     content: <Widget>[
+  //       Text(
+  //         'Bill Summary',
+  //         style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
+  //       ),
+  //       const SizedBox(
+  //         height: 14,
+  //       ),
+  //       Card(
+  //           color: Colors.grey.shade50,
+  //           surfaceTintColor: Colors.transparent,
+  //           child: Padding(
+  //             padding: const EdgeInsets.all(18.0),
+  //             child: Column(children: <Widget>[
+  //               buidItems(
+  //                   title: 'Item total', amt: itemTotal.toStringAsFixed(2)),
+  //               ...provider.cart.alldata!.taxes!.map(
+  //                 (e) => buidItems(
+  //                     title: e.tax!.first.taxName!,
+  //                     amt: e.tax!.first.taxAmount!.toStringAsFixed(2)),
+  //               ),
+  //               buidItems(
+  //                   title: 'Delivery partner fee',
+  //                   amt: provider.cart.alldata!.deliveryCharge!
+  //                       .toStringAsFixed(2),
+  //                   subtitle: 'goes to them for their time and effort'),
+  //               const Divider(),
+  //               ListTile(
+  //                 dense: true,
+  //                 horizontalTitleGap: 2,
+  //                 title: Text('Grand Total',
+  //                     style: AppStyles.getSemiBoldTextStyle(fontSize: 13)),
+  //                 trailing: Text(
+  //                   '${AppStrings.inrSymbol}${provider.cart.totalCost!.toStringAsFixed(2)}',
+  //                   style: AppStyles.getMediumTextStyle(fontSize: 13),
+  //                 ),
+  //               )
+  //             ]),
+  //           ))
+  //     ],
+  //   );
+  // }
 
   void onTapPaymentMethod(ValueChanged<int?>? onChanged) {
     CustomDialogue().showCustomDialogue(
@@ -445,7 +464,9 @@ class _CartScreenState extends State<CartScreen> {
             controller: nameController,
             hint: 'Name',
             fillColor: Colors.grey.shade200,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(
@@ -457,7 +478,9 @@ class _CartScreenState extends State<CartScreen> {
             controller: nameController,
             hint: 'Contact',
             fillColor: Colors.grey.shade200,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(
@@ -484,7 +507,9 @@ class _CartScreenState extends State<CartScreen> {
           hint: 'Write here',
           maxLines: 5,
           fillColor: Colors.grey.shade200,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none),
         ),
       ),
       const SizedBox(
@@ -512,7 +537,9 @@ class _CartScreenState extends State<CartScreen> {
             hint: 'Write here',
             maxLines: 5,
             fillColor: Colors.grey.shade200,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide.none),
           ),
         ),
         const SizedBox(
@@ -523,7 +550,8 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget buidItems({required String title, required String amt, String? subtitle}) {
+  Widget buidItems(
+      {required String title, required String amt, String? subtitle}) {
     return Column(
       children: <Widget>[
         Row(
@@ -547,7 +575,8 @@ class _CartScreenState extends State<CartScreen> {
           alignment: Alignment.centerLeft,
           child: Text(
             subtitle ?? '',
-            style: AppStyles.getMediumTextStyle(fontSize: 11, color: Colors.grey.shade500),
+            style: AppStyles.getMediumTextStyle(
+                fontSize: 11, color: Colors.grey.shade500),
           ),
         ),
       ],
@@ -581,7 +610,8 @@ class _CartScreenState extends State<CartScreen> {
                   style: AppStyles.getSemiBoldTextStyle(fontSize: 14),
                 ),
                 const Spacer(),
-                Icon(Icons.keyboard_arrow_right_outlined, color: AppColors.baseColor),
+                Icon(Icons.keyboard_arrow_right_outlined,
+                    color: AppColors.baseColor),
               ],
             ),
           ),
@@ -614,7 +644,8 @@ class _CartScreenState extends State<CartScreen> {
               'Lorem ipsum dolor sit amet, consect adipis consectetur',
               maxLines: 3,
               overflow: TextOverflow.visible,
-              style: AppStyles.getMediumTextStyle(fontSize: 12, color: Colors.grey),
+              style: AppStyles.getMediumTextStyle(
+                  fontSize: 12, color: Colors.grey),
             ),
           ),
         ),

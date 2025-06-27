@@ -1,90 +1,70 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:orado_customer/features/location/provider/location_provider.dart';
-import 'package:orado_customer/services/api_services.dart';
-import 'package:provider/provider.dart';
+import 'package:orado_customer/services/cart_services.dart';
 
+import '../../../utilities/debouncer.dart';
 import '../models/cart_model.dart';
 
 class CartProvider extends ChangeNotifier {
   bool _isLoading = false;
+
   bool get isLoading => _isLoading;
 
-  CartModel _cart = CartModel(cartItems: []);
-  CartModel get cart => _cart;
+  List<Products> _cartItems = [];
+
+  List<Products> get cartItems => _cartItems;
+  final _debouncers = <String, Debouncer>{}; // Keyed by productId
 
   putLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
-  getCart(BuildContext context) async {
-    putLoading(true);
-    var response = await APIServices().getCart(
-      lat: context.read<LocationProvider>().currentLocationLatLng!.latitude,
-      long: context.read<LocationProvider>().currentLocationLatLng!.longitude,
-    );
-    // try {
-    log(response.body);
-    var body = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      _cart = CartModel.fromJson(body);
-    }
-    // } catch (e) {
-    //   print(e);
-    // }
-    putLoading(false);
+  toggleLoading() {
+    _isLoading = !_isLoading;
+    notifyListeners();
   }
 
-  addToCart(BuildContext context, {required String productId, required String merchantId, required int quantity}) async {
-    putLoading(true);
-    var response = await APIServices().addToCart(productId: productId, merchantId: merchantId, quantity: quantity);
-    try {
-      if (response.statusCode == 200) {
-        getCart(context);
+  Future<void> getAllCart() async {
+    var response = await CartServices.getAllCart();
+
+    if (response.messageType == "success" &&
+        response.data != null &&
+        response.data?.products != null) {
+      cartItems.clear();
+      cartItems.addAll(response.data?.products ?? []);
+      notifyListeners();
+    }
+  }
+
+  void addToCart({
+    required String restaurantId,
+    required String productId,
+    required int quantity,
+  }) {
+    final existingIndex =
+        _cartItems.indexWhere((item) => item.productId == productId);
+
+    if (!_debouncers.containsKey(productId)) {
+      _debouncers[productId] =
+          Debouncer(delay: const Duration(milliseconds: 900));
+    }
+
+    _debouncers[productId]!.debounce(() {
+      if (quantity <= 0) {
+        if (existingIndex != -1) _cartItems.removeAt(existingIndex);
+      } else if (existingIndex != -1) {
+        final current = _cartItems[existingIndex];
+        _cartItems[existingIndex] = current.copyWith(quantity: quantity);
+      } else {
+        _cartItems.add(Products(
+          productId: productId,
+          quantity: quantity,
+          // fill in other fields if needed
+        ));
       }
-    } catch (e) {
-      print(e);
-    }
-    putLoading(false);
-  }
 
-  deleteFromCart(BuildContext context, {required String itemId}) async {
-    putLoading(true);
-    var response = await APIServices().deleteFromCart(itemId);
-    try {
-      if (response.statusCode == 200) {
-        getCart(context);
-      }
-    } catch (e) {
-      print(e);
-    }
-
-    putLoading(false);
-  }
-
-  updateItemInCart(BuildContext context, {required String itemId, required int quantity}) async {
-    putLoading(true);
-    var response = await APIServices().editCart(itemId: itemId, quantity: quantity);
-    try {
-      if (response.statusCode == 200) {
-        getCart(context);
-      }
-    } catch (e) {
-      print(e);
-    }
-    putLoading(false);
-  }
-
-  Future<bool> buyFromCart(BuildContext context, {required Map data}) async {
-    putLoading(true);
-    bool success = false;
-    var response = await APIServices().buyFromCart(data);
-    log(response.body);
-    success = response.statusCode == 200;
-    putLoading(false);
-    return success;
+      notifyListeners();
+      // Optionally make the real API call here
+    });
   }
 }

@@ -228,34 +228,61 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           const SizedBox(height: 20),
                                           Container(
                                             height: 60,
-                                            width: MediaQuery.sizeOf(context).width,
+                                            width: MediaQuery.sizeOf(context)
+                                                .width,
                                             decoration: const BoxDecoration(),
                                             child: ListView.builder(
-                                                itemCount: filteringOptions.length,
+                                                itemCount:
+                                                    filteringOptions.length,
                                                 shrinkWrap: true,
-                                                scrollDirection: Axis.horizontal,
-                                                itemBuilder: (BuildContext c, int i) {
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                itemBuilder:
+                                                    (BuildContext c, int i) {
                                                   return InkWell(
                                                     onTap: () {},
                                                     radius: 50,
                                                     child: Center(
                                                       child: Padding(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 7.0, vertical: 3),
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 7.0,
+                                                                vertical: 3),
                                                         child: Material(
                                                           elevation: 5,
                                                           color: Colors.white,
-                                                          surfaceTintColor: Colors.white,
-                                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                          surfaceTintColor:
+                                                              Colors.white,
+                                                          shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          10)),
                                                           child: Padding(
-                                                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 7),
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        12.0,
+                                                                    vertical:
+                                                                        7),
                                                             child: Row(
                                                               children: <Widget>[
-                                                                if (i == 0) const Icon(Icons.settings, size: 14),
-                                                                const SizedBox(width: 10),
+                                                                if (i == 0)
+                                                                  const Icon(
+                                                                      Icons
+                                                                          .settings,
+                                                                      size: 14),
+                                                                const SizedBox(
+                                                                    width: 10),
                                                                 Text(
-                                                                  filteringOptions[i],
-                                                                  style: AppStyles.getBoldTextStyle(
-                                                                    fontSize: 15,
+                                                                  filteringOptions[
+                                                                      i],
+                                                                  style: AppStyles
+                                                                      .getBoldTextStyle(
+                                                                    fontSize:
+                                                                        15,
                                                                   ),
                                                                 ),
                                                               ],
@@ -281,8 +308,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           ),
                                           const SizedBox(height: 20),
                                           FoodsListingCard(
-                                              products: provider.menuItems,
-                                              merchantId: widget.id!),
+                                              items: provider.menuItems,
+                                              restaurantId: widget.id!),
                                           const SizedBox(height: 30),
                                           // Align(
                                           //   alignment: Alignment.centerLeft,
@@ -326,40 +353,43 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           }),
         ],
       ),
-      // bottomNavigationBar: Consumer<CartProvider>(
-      //   builder: (context, provider, _) {
-      //     if (provider.cart.cartItems != null &&
-      //         provider.cart.cartItems!.isNotEmpty &&
-      //         provider.cart.cartItems!.firstWhere((e) => e.merchantId.toString() == widget.id, orElse: () => CartItemModel(cartId: -1)).cartId != -1) {
-      //       return GestureDetector(
-      //         onTap: () {
-      //           context.pushNamed(CartScreen.route);
-      //         },
-      //         child: AnimatedContainer(
-      //           duration: const Duration(milliseconds: 600),
-      //           color: AppColors.baseColor,
-      //           height: 80,
-      //           width: MediaQuery.sizeOf(context).width,
-      //           child: Column(
-      //             mainAxisAlignment: MainAxisAlignment.center,
-      //             children: <Widget>[
-      //               Text(
-      //                 '${provider.cart.cartItems!.length} Item added >',
-      //                 style: AppStyles.getSemiBoldTextStyle(fontSize: 15, color: Colors.white),
-      //               ),
-      //               // const SizedBox(height: 5),
-      //               // Text(
-      //               //   'Add items worth ${AppStrings.inrSymbol}1000 more to get free delivery',
-      //               //   style: AppStyles.getMediumTextStyle(fontSize: 16, color: Colors.white),
-      //               // ),
-      //             ],
-      //           ),
-      //         ),
-      //       );
-      //     }
-      //     return SizedBox();
-      //   },
-      // ),
+      bottomNavigationBar: Consumer<CartProvider>(
+        builder: (context, cartProvider, child) {
+          final int totalItems = cartProvider.cartItems.fold(
+            0,
+            (sum, item) => sum + (item.quantity ?? 0),
+          );
+
+          if (totalItems == 0) {
+            return const SizedBox
+                .shrink(); // Optional: hide bar when cart is empty
+          }
+
+          return GestureDetector(
+            onTap: () {
+              context.pushNamed('cart');
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 600),
+              color: AppColors.baseColor,
+              height: 80,
+              width: MediaQuery.sizeOf(context).width,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    '$totalItems Items added >',
+                    style: AppStyles.getSemiBoldTextStyle(
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
