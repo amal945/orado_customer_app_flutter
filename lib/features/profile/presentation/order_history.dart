@@ -10,7 +10,7 @@ class OrderHistory extends StatelessWidget {
 
   static const String route = 'order-history';
 
-   final List<Map<String, dynamic>> orders = const [
+  final List<Map<String, dynamic>> orders = const [
     {
       "restaurantName": "Mirchi Restaurant",
       "location": "Sahebganj",
@@ -41,7 +41,8 @@ class OrderHistory extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Your Orders",
+        title: Text(
+          "Your Orders",
           style:
               AppStyles.getBoldTextStyle(fontSize: 22, color: AppColors.yellow),
         ),
@@ -56,21 +57,36 @@ class OrderHistory extends StatelessWidget {
         ),
         iconTheme: IconThemeData(color: AppColors.greycolor),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        itemCount: orders.length,
-        itemBuilder: (context, index) {
-          final order = orders[index];
-          return CustomPastOrder(
-            restaurantName: order["restaurantName"],
-            location: order["location"],
-            price: order["price"].toString(),
-            items: order["items"],
-            time: order["time"],
-            isDelivered: order["isDelivered"],
-          );
-        },
-      ),
+      body: orders.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history, size: 64, color: Colors.grey),
+                  SizedBox(height: 16),
+                  Text(
+                    'No order history yet',
+                    style: AppStyles.getSemiBoldTextStyle(
+                        fontSize: 18, color: Colors.grey),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              itemCount: orders.length,
+              itemBuilder: (context, index) {
+                final order = orders[index];
+                return CustomPastOrder(
+                  restaurantName: order["restaurantName"],
+                  location: order["location"],
+                  price: order["price"].toString(),
+                  items: order["items"],
+                  time: order["time"],
+                  isDelivered: order["isDelivered"],
+                );
+              },
+            ),
     );
   }
 }
