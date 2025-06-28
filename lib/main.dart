@@ -109,7 +109,6 @@ class _MyAppState extends State<MyApp> {
                   create: (_) => CartProvider()),
               ChangeNotifierProvider<ProfileProvider>(
                   create: (_) => ProfileProvider()),
-
             ],
             child: child,
           );

@@ -19,34 +19,37 @@ class MerchantProvider extends ChangeNotifier {
 
   List<MerchantModel> merchants = [];
   MerchantDetailModel? _singleMerchant;
-
   Map<String, List<ProductModel>> _merchantProducts = {};
+  List<MerchantDetailModel> merchantDetails = [];
+  List<MenuItem> menuItems = [];
+  List<MenuItem> filteredMenuItems = [];
+
+  final TextEditingController searchController = TextEditingController();
+
+  bool _isSearching = false;
+
+  bool get isSearching => _isSearching;
+
+  set isSearching(bool val) {
+    _isSearching = val;
+    notifyListeners();
+  }
 
   Map<String, List<ProductModel>> get merchantProducts => _merchantProducts;
-
-  String? selectedMerchantId;
-  String _shopStatus = ''; // Added missing _shopStatus for changeShopStatus
 
   bool get isLoading => _isLoading;
 
   String get message => _message;
-
-  MerchantDetailModel? get singleMerchant => _singleMerchant;
-
-  String get shopStatus => _shopStatus; // Getter for _shopStatus
 
   void putLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
-  List<MerchantDetailModel> merchantDetails = [];
-
-  List<MenuItem> menuItems = [];
-  List<MenuItem> filteredMenuItems = [];
-
-  Future<void> getMerchantDetails(
-      {required String restaurantId, required LatLng latlng}) async {
+  Future<void> getMerchantDetails({
+    required String restaurantId,
+    required LatLng latlng,
+  }) async {
     putLoading(true);
     try {
       final response = await RestaurantServices.getMerchantDetails(
@@ -76,5 +79,19 @@ class MerchantProvider extends ChangeNotifier {
       }
     } catch (e) {}
     putLoading(false);
+  }
+
+  void filterMenuItems(String query) {
+    if (query.trim().isEmpty) {
+      isSearching = false;
+      filteredMenuItems.clear();
+    } else {
+      isSearching = true;
+      filteredMenuItems = menuItems
+          .where((item) =>
+              item.name?.toLowerCase().contains(query.toLowerCase()) ?? false)
+          .toList();
+    }
+    notifyListeners();
   }
 }

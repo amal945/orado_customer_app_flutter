@@ -186,7 +186,7 @@ final router = GoRouter(
           name: MerchantDetailScreen.route,
           pageBuilder: (context, state) {
             return getCustomTransition(state,
-                MerchantDetailScreen(id: state.uri.queryParameters['id']));
+                MerchantDetailScreen(id: state.uri.queryParameters['id'],query: state.uri.queryParameters['query'],));
           },
         ),
         GoRoute(

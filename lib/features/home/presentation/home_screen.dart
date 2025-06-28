@@ -106,8 +106,9 @@ class _HomeState extends State<Home> {
                                     onTap: () {
                                       context.pushNamed(
                                         MerchantDetailScreen.route,
-                                        extra: {
-                                          'searchQuery': _searchQuery,
+                                        queryParameters: {
+                                          'id': data.merchantId,
+                                          'query': sea,
                                         },
                                       );
                                     },

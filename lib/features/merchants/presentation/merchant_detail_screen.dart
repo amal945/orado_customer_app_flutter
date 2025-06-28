@@ -15,10 +15,11 @@ import '../../../utilities/common/food_listing_card.dart';
 import '../../../utilities/utilities.dart';
 
 class MerchantDetailScreen extends StatefulWidget {
-  const MerchantDetailScreen({super.key, this.id});
+  const MerchantDetailScreen({super.key, this.id, this.query});
 
   static String route = 'merchant-details';
   final String? id;
+  final String? query;
 
   @override
   State<MerchantDetailScreen> createState() => _MerchantDetailScreenState();
@@ -38,61 +39,84 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           restaurantId: widget.id!,
           latlng: context.read<LocationProvider>().currentLocationLatLng!);
       context.read<MerchantProvider>().getMenu(restaurantId: widget.id!);
+      if(widget.query != null && widget.query!.isNotEmpty){
+        context.read<MerchantProvider>().filterMenuItems(widget.query!);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.read<MerchantProvider>();
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_ios_new_outlined),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: Consumer<MerchantProvider>(
+          builder: (context, provider, _) {
+            return provider.isSearching
+                ? AppBar(
+                    elevation: 0,
+                    backgroundColor: AppColors.baseColor,
+                    leading: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_outlined,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          context.pop();
+                        }),
+                    title: TextField(
+                      controller: provider.searchController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: "Search food...",
+                        hintStyle: TextStyle(color: Colors.white70),
+                        border: InputBorder.none,
+                      ),
+                      onChanged: provider.filterMenuItems,
+                    ),
+                    actions: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          provider.searchController.clear();
+                          provider.filterMenuItems('');
+                        },
+                      ),
+                    ],
+                  )
+                : AppBar(
+                    elevation: 0,
+                    leading: IconButton(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.arrow_back_ios_new_outlined),
+                    ),
+                    iconTheme: const IconThemeData(color: Colors.white),
+                    backgroundColor: AppColors.baseColor,
+                    title: Text(
+                      'Merchant Details',
+                      style: AppStyles.getBoldTextStyle(
+                          color: Colors.white, fontSize: 14),
+                    ),
+                    centerTitle: true,
+                    actions: <Widget>[
+                      InkWell(
+                          onTap: () {
+                            provider.isSearching = true;
+                          },
+                          child: const Icon(Icons.search)),
+                      const SizedBox(width: 10),
+                      InkWell(onTap: () {}, child: const Icon(Icons.favorite)),
+                      const SizedBox(width: 10),
+                    ],
+                  );
+          },
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: AppColors.baseColor,
-        actions: <Widget>[
-          InkWell(onTap: () {}, child: const Icon(Icons.search)),
-          const SizedBox(width: 10),
-          InkWell(onTap: () {}, child: const Icon(Icons.favorite)),
-          const SizedBox(width: 10),
-          InkWell(onTap: () {}, child: const Icon(Icons.share)),
-          const SizedBox(width: 10),
-          InkWell(onTap: () {}, child: const Icon(Icons.more_vert_sharp)),
-        ],
       ),
-      // body: Center(
-      //   child: Column(
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     crossAxisAlignment: CrossAxisAlignment.center,
-      //     children: [
-      //       Text("Merchant Details Screen"),
-      //       ElevatedButton(
-      //           style: ButtonStyle(
-      //             backgroundColor: WidgetStateProperty.all<Color>(Colors.red),
-      //           ),
-      //           onPressed: () async {
-      //             await context.read<MerchantProvider>().getMerchantDetails(
-      //                 restaurantId: widget.id!,
-      //                 latlng: context
-      //                     .read<LocationProvider>()
-      //                     .currentLocationLatLng!);
-      //
-      //             await context
-      //                 .read<MerchantProvider>()
-      //                 .getMenu(restaurantId: widget.id!);
-      //           },
-      //           child: Text(
-      //             "Try Again",
-      //             style: AppStyles.getBoldTextStyle(
-      //                 fontSize: 14, color: Colors.white),
-      //           ))
-      //     ],
-      //   ),
-      // ),
-
       body: CustomScrollView(
         controller: scrollController,
         shrinkWrap: true,
@@ -112,8 +136,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                 ),
               );
             }
-            // final Productstablerelation1? merchant = provider.merchantProducts[widget.id]!.first.product!.productstablerelation1;
-
             final data = provider.merchantDetails.first;
             return SliverList(
               delegate: SliverChildListDelegate(
