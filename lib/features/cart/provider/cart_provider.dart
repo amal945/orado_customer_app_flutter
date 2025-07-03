@@ -1,38 +1,68 @@
-import 'package:flutter/material.dart';
-import 'package:orado_customer/services/cart_services.dart';
+import 'dart:developer';
 
+import 'package:flutter/material.dart';
+import 'package:orado_customer/services/cart_services.dart'; // Ensure this path is correct
 import '../../../utilities/debouncer.dart';
 import '../models/cart_model.dart';
 
 class CartProvider extends ChangeNotifier {
   bool _isLoading = false;
-
   bool get isLoading => _isLoading;
 
   List<Products> _cartItems = [];
-
   List<Products> get cartItems => _cartItems;
-  final _debouncers = <String, Debouncer>{}; // Keyed by productId
 
-  putLoading(bool value) {
+  Data? _cartData;
+  Data? get cartData => _cartData;
+
+  final _debouncers = <String, Debouncer>{};
+
+  void putLoading(bool value) {
     _isLoading = value;
     notifyListeners();
   }
 
-  toggleLoading() {
+  void toggleLoading() {
     _isLoading = !_isLoading;
     notifyListeners();
   }
 
   Future<void> getAllCart() async {
-    var response = await CartServices.getAllCart();
+    putLoading(true);
+    try {
+      var response = await CartServices.getAllCart();
+      putLoading(false);
 
-    if (response.messageType == "success" &&
-        response.data != null &&
-        response.data?.products != null) {
-      cartItems.clear();
-      cartItems.addAll(response.data?.products ?? []);
+      final products = response.data?.products;
+
+      if (response.messageType == "success" &&
+          response.data != null &&
+          products != null &&
+          products.isNotEmpty) {
+        _cartItems.clear();
+        _cartItems.addAll(products);
+        _cartData = response.data;
+        notifyListeners();
+        log("Cart loaded successfully with ${products.length} items.");
+      } else if (products == null || products.isEmpty) {
+        // Cart is valid but empty
+        _cartItems.clear();
+        _cartData = response.data; // can still hold other info like totals = 0
+        notifyListeners();
+        log("Cart is empty");
+      } else {
+        // Unexpected failure or unknown response
+        _cartItems.clear();
+        _cartData = null;
+        notifyListeners();
+        log("Failed to load cart: ${response.message}");
+      }
+    } catch (e) {
+      putLoading(false);
+      _cartItems.clear();
+      _cartData = null;
       notifyListeners();
+      log("Error fetching cart: $e");
     }
   }
 
@@ -49,22 +79,40 @@ class CartProvider extends ChangeNotifier {
           Debouncer(delay: const Duration(milliseconds: 900));
     }
 
-    _debouncers[productId]!.debounce(() {
-      if (quantity <= 0) {
-        if (existingIndex != -1) _cartItems.removeAt(existingIndex);
-      } else if (existingIndex != -1) {
-        final current = _cartItems[existingIndex];
-        _cartItems[existingIndex] = current.copyWith(quantity: quantity);
-      } else {
-        _cartItems.add(Products(
-          productId: productId,
-          quantity: quantity,
-          // fill in other fields if needed
-        ));
+    // Immediately update the UI for responsiveness
+    if (quantity <= 0) {
+      if (existingIndex != -1) _cartItems.removeAt(existingIndex);
+    } else if (existingIndex != -1) {
+      final current = _cartItems[existingIndex];
+      _cartItems[existingIndex] = current.copyWith(quantity: quantity);
+    } else {
+      _cartItems.add(Products(
+        productId: productId,
+        quantity: quantity,
+        // Optional: Add more fields here if needed
+      ));
+    }
+    notifyListeners(); // Notify listeners for immediate UI update
+
+    _debouncers[productId]!.debounce(() async {
+      log("Debounced API call for product $productId with quantity $quantity initiated.");
+      log("  Restaurant ID: $restaurantId");
+      log("  Product ID: $productId");
+      log("  Quantity: $quantity");
+
+      try {
+        final response = await CartServices.addToCart(requestBody: {
+          "restaurantId": restaurantId,
+          "productId": productId,
+          "quantity": quantity,
+        });
+        log("Add to cart API response: ${response.message}");
+      } catch (e) {
+        log("Error in addToCart service: $e");
       }
 
-      notifyListeners();
-      // Optionally make the real API call here
+      await getAllCart(); // Refresh cart
+      log("Debounced API call for product $productId with quantity $quantity completed (and cart refreshed).");
     });
   }
 }

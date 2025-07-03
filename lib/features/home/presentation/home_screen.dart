@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/auth/presentation/get_started_screen.dart';
@@ -49,7 +51,6 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
-    homeProvider.clearState(); // ✅ Safe now
     super.dispose();
   }
 
@@ -118,6 +119,7 @@ class _HomeState extends State<Home> {
                                       provider.filteredRestaurantList[index];
                                   return GestureDetector(
                                     onTap: () {
+                                      log('Navigating to MerchantDetailScreen from All Restaurants with Merchant ID: ${data.merchantId}');
                                       context.pushNamed(
                                         MerchantDetailScreen.route,
                                         queryParameters: {

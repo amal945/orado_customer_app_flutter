@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:orado_customer/features/auth/model/global_response_model.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
@@ -9,7 +10,7 @@ import '../features/cart/models/cart_model.dart';
 
 class CartServices {
   static Future<GlobalResponseModel> addToCart(
-      {required Map<String,dynamic> requestBody}) async {
+      {required Map<String, dynamic> requestBody}) async {
     try {
       final url = Uri.parse("${Urls.baserUrl}cart/add");
 
@@ -38,11 +39,11 @@ class CartServices {
     }
   }
 
- static Future<CartModel> getAllCart() async {
+  static Future<CartModel> getAllCart() async {
     try {
       final url = Uri.parse("${Urls.baserUrl}cart");
       final token = await LocationProvider.getToken();
-
+      // log(token);
       final response = await http.get(
         url,
         headers: {
@@ -51,16 +52,17 @@ class CartServices {
         },
       );
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final data = CartModel.fromJson(json);
-        return data;
-      } else {
-        final json = jsonDecode(response.body);
-        final data = CartModel.fromJson(json);
-        return data;
+      final json = jsonDecode(response.body);
+      final data = CartModel.fromJson(json);
+
+      if (response.statusCode != 200) {
+        // Log the error message from the backend if status code is not 200
+        log("CartServices.getAllCart error (${response.statusCode}): ${data.message}");
       }
+
+      return data; // Always return the parsed CartModel
     } catch (e) {
+      log("CartServices.getAllCart exception: $e"); // Log the exception
       rethrow;
     }
   }

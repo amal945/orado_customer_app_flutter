@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/cart/presentation/order_status_screen.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
+import 'package:orado_customer/features/cart/provider/order_price_summary_controller.dart';
+import 'package:orado_customer/features/location/presentation/address_screen.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/user/provider/user_provider.dart';
 import 'package:orado_customer/utilities/common/loading_widget.dart';
@@ -39,14 +41,21 @@ class _CartScreenState extends State<CartScreen> {
     deliveryInstruction.dispose();
   }
 
-  @override
   void initState() {
     super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) => context.read<CartProvider>().getCart(context));
+    // Call getAllCart after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CartProvider>().getAllCart();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final orderController =
+        Provider.of<OrderPriceSummaryController>(context, listen: false);
+    final summary = orderController.priceSummary?.data;
+
+    double grandTotal = double.tryParse(summary?.total ?? '0') ?? 0;
     return Consumer<CartProvider>(builder: (context, provider, _) {
       return CustomUi(
         gap: 0,
@@ -133,10 +142,14 @@ class _CartScreenState extends State<CartScreen> {
                                     children: <Widget>[
                                       // Text('${AppStrings.inrSymbol}${provider.cart.totalCost}'),
                                       Text("total cost"),
-                                      const Text('Total'),
+                                      Text(
+                                        '${AppStrings.inrSymbol}${grandTotal.toStringAsFixed(2)}',
+                                        style: AppStyles.getMediumTextStyle(
+                                            fontSize: 13),
+                                      ),
                                     ],
                                   ),
-                                  const SizedBox(width: 20),
+                                  const SizedBox(width: 12),
                                   const Text('Place order'),
                                 ],
                               ),
@@ -348,7 +361,7 @@ class _CartScreenState extends State<CartScreen> {
                   ListTile(
                     dense: true,
                     visualDensity: VisualDensity.compact,
-                    // onTap: () => onTapTotalBill(context, provider),
+                    onTap: () => onTapTotalBill(context, provider),
                     leading: const Icon(OradoIcon.orders),
                     title: Text(
                         'Total Bill ${AppStrings.inrSymbol}${provider.cartItems.length}'),
@@ -366,6 +379,100 @@ class _CartScreenState extends State<CartScreen> {
         ],
       );
     });
+  }
+
+  void onTapTotalBill(BuildContext context, CartProvider provider) async {
+    final orderController =
+        Provider.of<OrderPriceSummaryController>(context, listen: false);
+
+    // Get location from LocationProvider
+    final location =
+        await context.read<LocationProvider>().currentLocationLatLng;
+
+    if (location == null ||
+        location.latitude == null ||
+        location.longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Unable to fetch current location")),
+      );
+      return;
+    }
+
+    final latitude = location.latitude.toString();
+    final longitude = location.longitude.toString();
+
+    // Call loadPriceSummary with dynamic values
+    await orderController.loadPriceSummary(
+      longitude: longitude,
+      latitude: latitude,
+      cartId: provider.cartData!.cartId!,
+    );
+
+    final summary = orderController.priceSummary?.data;
+
+    if (summary == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load bill summary")),
+      );
+      return;
+    }
+
+    double itemTotal = double.tryParse(summary.subtotal ?? '0') ?? 0;
+    double deliveryFee = double.tryParse(summary.deliveryFee ?? '0') ?? 0;
+    double grandTotal = double.tryParse(summary.total ?? '0') ?? 0;
+
+    CustomDialogue().showCustomDialogue(
+      context: context,
+      content: <Widget>[
+        Text(
+          'Bill Summary',
+          style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
+        ),
+        const SizedBox(height: 14),
+        Card(
+          color: Colors.grey.shade50,
+          surfaceTintColor: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Column(
+              children: <Widget>[
+                buidItems(
+                    title: 'Item total', amt: itemTotal.toStringAsFixed(2)),
+
+                // Taxes list
+                ...?summary.taxes?.map(
+                  (e) => buidItems(
+                    title: e.name ?? '',
+                    amt: e.amount ?? '0.00',
+                  ),
+                ),
+
+                // Delivery Fee
+                buidItems(
+                  title: 'Delivery partner fee',
+                  amt: deliveryFee.toStringAsFixed(2),
+                  subtitle: 'goes to them for their time and effort',
+                ),
+
+                const Divider(),
+
+                // Grand Total
+                ListTile(
+                  dense: true,
+                  horizontalTitleGap: 2,
+                  title: Text('Grand Total',
+                      style: AppStyles.getSemiBoldTextStyle(fontSize: 13)),
+                  trailing: Text(
+                    '${AppStrings.inrSymbol}${grandTotal.toStringAsFixed(2)}',
+                    style: AppStyles.getMediumTextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
+      ],
+    );
   }
 
   // void onTapTotalBill(BuildContext context, CartProvider provider) {
@@ -591,7 +698,7 @@ class _CartScreenState extends State<CartScreen> {
       ),
       const SizedBox(height: 15),
       InkWell(
-        //  onTap: () => context.pushNamed(AppPaths.confirmDeliveryLocation),
+        onTap: () => context.pushNamed(AddressScreen.route),
         child: Card(
           color: Colors.grey.shade50,
           elevation: 0,
