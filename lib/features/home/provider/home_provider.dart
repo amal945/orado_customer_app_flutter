@@ -125,4 +125,17 @@ class HomeProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void clearState() {
+    _homeModel = null;
+    restaurantData.clear();
+    restaurantList.clear();
+    filteredRestaurantList.clear();
+    recommendedRestaurants.clear();
+    isRecommendedAvailable = false;
+    categoriesData.clear();
+    currentLocationLatLng = null;
+    currentLocationAddress = null;
+    notifyListeners();
+  }
 }

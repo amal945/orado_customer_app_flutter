@@ -39,6 +39,20 @@ class _HomeState extends State<Home> {
     });
   }
 
+  late HomeProvider homeProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    homeProvider = Provider.of<HomeProvider>(context);
+  }
+
+  @override
+  void dispose() {
+    homeProvider.clearState(); // ✅ Safe now
+    super.dispose();
+  }
+
   String address = 'Fetching...';
 
   @override

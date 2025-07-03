@@ -591,7 +591,7 @@ class _CartScreenState extends State<CartScreen> {
       ),
       const SizedBox(height: 15),
       InkWell(
-        //! onTap: () => context.pushNamed(AppPaths.confirmDeliveryLocation),
+        //  onTap: () => context.pushNamed(AppPaths.confirmDeliveryLocation),
         child: Card(
           color: Colors.grey.shade50,
           elevation: 0,

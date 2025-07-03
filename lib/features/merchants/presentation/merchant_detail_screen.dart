@@ -35,13 +35,26 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MerchantProvider>().getMerchantDetails(
-            restaurantId: widget.id!,
-            context: context,
-          );
-      context.read<MerchantProvider>().getMenu(restaurantId: widget.id!);
+      final merchantProvider = context.read<MerchantProvider>();
+      merchantProvider.getMerchantDetails(
+        restaurantId: widget.id!,
+        context: context,
+      );
+      merchantProvider.getMenu(restaurantId: widget.id!);
+
+      // Ensure filterMenuItems is called after initial data is potentially loaded
+      // and the widget tree is stable.
       if (widget.query != null && widget.query!.isNotEmpty) {
-        context.read<MerchantProvider>().filterMenuItems(widget.query!);
+        // You can either keep Future.microtask or use Future.delayed for a slight delay.
+        // Future.microtask is generally preferred for "as soon as possible"
+        // without waiting for a full frame. If the error persists,
+        // a small Future.delayed might be necessary, though less ideal.
+        Future.microtask(() {
+          if (mounted) {
+            // Check if the widget is still mounted before updating state
+            merchantProvider.filterMenuItems(widget.query!);
+          }
+        });
       }
     });
   }
