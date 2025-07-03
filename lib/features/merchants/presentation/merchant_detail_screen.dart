@@ -36,10 +36,11 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MerchantProvider>().getMerchantDetails(
-          restaurantId: widget.id!,
-          latlng: context.read<LocationProvider>().currentLocationLatLng!);
+            restaurantId: widget.id!,
+            context: context,
+          );
       context.read<MerchantProvider>().getMenu(restaurantId: widget.id!);
-      if(widget.query != null && widget.query!.isNotEmpty){
+      if (widget.query != null && widget.query!.isNotEmpty) {
         context.read<MerchantProvider>().filterMenuItems(widget.query!);
       }
     });
@@ -47,7 +48,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<MerchantProvider>();
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
@@ -130,10 +130,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
 
             if (provider.menuItems.isEmpty ||
                 provider.merchantDetails.isEmpty) {
-              return SliverFillRemaining(
-                child: Center(
-                  child: Text("Error"),
-                ),
+              return const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
               );
             }
             final data = provider.merchantDetails.first;

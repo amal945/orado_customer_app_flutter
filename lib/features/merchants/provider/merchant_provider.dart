@@ -7,8 +7,10 @@ import 'package:orado_customer/features/merchants/models/menu_data_model.dart';
 import 'package:orado_customer/features/merchants/models/product_model.dart';
 import 'package:orado_customer/services/restaurant_services.dart';
 import 'package:orado_customer/utilities/utilities.dart';
+import 'package:provider/provider.dart';
 
 import '../../../services/api_services.dart';
+import '../../location/provider/location_provider.dart';
 import '../models/merchant_detail_model.dart';
 import '../models/merchant_model.dart';
 
@@ -46,12 +48,11 @@ class MerchantProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> getMerchantDetails({
-    required String restaurantId,
-    required LatLng latlng,
-  }) async {
+  Future<void> getMerchantDetails(
+      {required String restaurantId, required BuildContext context}) async {
     putLoading(true);
     try {
+      LatLng latlng = context.read<LocationProvider>().currentLocationLatLng!;
       final response = await RestaurantServices.getMerchantDetails(
           restaurantId: restaurantId, latlng: latlng);
 

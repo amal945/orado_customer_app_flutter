@@ -108,7 +108,7 @@ class _HomeState extends State<Home> {
                                         MerchantDetailScreen.route,
                                         queryParameters: {
                                           'id': data.merchantId,
-                                          'query': sea,
+                                          // 'query': sea,
                                         },
                                       );
                                     },
