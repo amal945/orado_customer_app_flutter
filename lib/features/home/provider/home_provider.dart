@@ -72,7 +72,7 @@ class HomeProvider extends ChangeNotifier {
         }
 
         final restaurantResponse =
-            await HomeService.getRestaurants(lat: latitude, long: longitude);
+            await HomeService.getRestaurants(lat: tempLatitude, long: tempLongitude);
 
         if (restaurantResponse.messageType != null &&
             restaurantResponse.messageType == "success") {
