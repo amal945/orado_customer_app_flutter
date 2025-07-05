@@ -5,6 +5,8 @@ import 'package:orado_customer/features/auth/provider/reset_password_provider.da
 import 'package:orado_customer/features/auth/provider/sign_up_provider.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/cart/provider/order_price_summary_controller.dart';
+import 'package:orado_customer/features/cart/provider/order_provider.dart';
+import 'package:orado_customer/features/cart/provider/order_summary_provider.dart';
 import 'package:orado_customer/features/home/provider/home_provider.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/location/provider/map_provider.dart';
@@ -112,6 +114,10 @@ class _MyAppState extends State<MyApp> {
                   create: (_) => ProfileProvider()),
               ChangeNotifierProvider<OrderPriceSummaryController>(
                   create: (_) => OrderPriceSummaryController()),
+              ChangeNotifierProvider<PlaceOrderController>(
+                  create: (_) => PlaceOrderController()),
+              ChangeNotifierProvider<OrderSummaryController>(
+                  create: (_) => OrderSummaryController()),
             ],
             child: child,
           );

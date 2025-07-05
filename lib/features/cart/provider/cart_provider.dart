@@ -89,10 +89,9 @@ class CartProvider extends ChangeNotifier {
       _cartItems.add(Products(
         productId: productId,
         quantity: quantity,
-        // Optional: Add more fields here if needed
       ));
     }
-    notifyListeners(); // Notify listeners for immediate UI update
+    notifyListeners();
 
     _debouncers[productId]!.debounce(() async {
       log("Debounced API call for product $productId with quantity $quantity initiated.");
@@ -111,7 +110,7 @@ class CartProvider extends ChangeNotifier {
         log("Error in addToCart service: $e");
       }
 
-      await getAllCart(); // Refresh cart
+      await getAllCart();
       log("Debounced API call for product $productId with quantity $quantity completed (and cart refreshed).");
     });
   }

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:orado_customer/features/user/model/favourite_model.dart';
 import 'package:orado_customer/services/favourite_services.dart';
@@ -21,7 +23,7 @@ class UserProvider extends ChangeNotifier {
       _favourites = response.data;
       notifyListeners();
     } catch (e) {
-      print("Error fetching favourites: $e");
+      log("Error fetching favourites: $e");
     }
     putLoading(false);
   }
@@ -33,7 +35,7 @@ class UserProvider extends ChangeNotifier {
       _favourites.add(item);
       notifyListeners();
     } catch (e) {
-      print("Error adding favourite: $e");
+      log("Error adding favourite: $e");
     }
   }
 
@@ -43,7 +45,7 @@ class UserProvider extends ChangeNotifier {
       _favourites.removeWhere((fav) => fav.id == restaurantId);
       notifyListeners();
     } catch (e) {
-      print("Error removing favourite: $e");
+      log("Error removing favourite: $e");
     }
   }
 

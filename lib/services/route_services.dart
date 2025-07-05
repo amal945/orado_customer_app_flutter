@@ -135,7 +135,6 @@ final router = GoRouter(
             );
           },
         ),
-
         GoRoute(
           path: AddressScreen.route,
           name: AddressScreen.route,
@@ -185,8 +184,12 @@ final router = GoRouter(
           path: MerchantDetailScreen.route,
           name: MerchantDetailScreen.route,
           pageBuilder: (context, state) {
-            return getCustomTransition(state,
-                MerchantDetailScreen(id: state.uri.queryParameters['id'],query: state.uri.queryParameters['query'],));
+            return getCustomTransition(
+                state,
+                MerchantDetailScreen(
+                  id: state.uri.queryParameters['id'],
+                  query: state.uri.queryParameters['query'],
+                ));
           },
         ),
         GoRoute(
