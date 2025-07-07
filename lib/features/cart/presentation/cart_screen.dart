@@ -37,55 +37,17 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   Debouncer deboucer = Debouncer(delay: const Duration(milliseconds: 700));
   int paymentMethod = 1; // 0 for Razorpay, 1 for Cash on Delivery
-  final TextEditingController cookingInstruction = TextEditingController();
-  final TextEditingController deliveryInstruction = TextEditingController();
 
   // Added to keep track of the selected address ID
   String? _selectedAddressId;
 
   @override
-  void dispose() {
-    cookingInstruction.dispose();
-    deliveryInstruction.dispose();
-    super.dispose();
-  }
-
-  @override
   void initState() {
     super.initState();
-    // Call getAllCart and load price summary after the first frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CartProvider>().getAllCart();
-      // Initially load price summary to display total cost
-      _loadInitialPriceSummary();
+      context.read<CartProvider>().loadInitialPriceSummary(context);
     });
-  }
-
-  // New method to load price summary
-  Future<void> _loadInitialPriceSummary() async {
-    final cartProvider = context.read<CartProvider>();
-    final orderController = context.read<OrderPriceSummaryController>();
-    final locationProvider = context.read<LocationProvider>();
-
-    if (cartProvider.cartData?.cartId == null) {
-      log('Cart ID is null, cannot load price summary.');
-      return;
-    }
-
-    final location = await locationProvider.currentLocationLatLng;
-
-    if (location == null ||
-        location.latitude == null ||
-        location.longitude == null) {
-      log("Unable to fetch current location for price summary.");
-      return;
-    }
-
-    await orderController.loadPriceSummary(
-      longitude: location.longitude.toString(),
-      latitude: location.latitude.toString(),
-      cartId: cartProvider.cartData!.cartId!,
-    );
   }
 
   @override
@@ -175,10 +137,11 @@ class _CartScreenState extends State<CartScreen> {
                             addressId: _selectedAddressId!,
                             paymentMethod:
                                 paymentMethod == 0 ? "razorpay" : "cash",
-                            couponCode: "", // You can add logic for coupon code
-                            instructions: cookingInstruction.text +
+                            couponCode: "",
+                            // You can add logic for coupon code
+                            instructions: cartProvider.cookingInstruction.text +
                                 " " +
-                                deliveryInstruction.text,
+                                cartProvider.deliveryInstruction.text,
                             tipAmount: 0, // You can add logic for tip amount
                           );
 
@@ -278,7 +241,8 @@ class _CartScreenState extends State<CartScreen> {
                             } else {
                               // cartProvider.updateItemInCart(context, itemId: item.cartId.toString(), quantity: item.quantity!);
                             }
-                            _loadInitialPriceSummary(); // Recalculate summary after cart update
+                            context.read<CartProvider>().loadInitialPriceSummary(
+                                context); // Recalculate summary after cart update
                           });
                         },
                         child: const Icon(
@@ -296,7 +260,8 @@ class _CartScreenState extends State<CartScreen> {
                           setState(() => item.quantity = item.quantity! + 1);
                           deboucer.debounce(() {
                             // cartProvider.updateItemInCart(context, itemId: item.cartId.toString(), quantity: item.quantity!);
-                            _loadInitialPriceSummary(); // Recalculate summary after cart update
+                            context.read<CartProvider>().loadInitialPriceSummary(
+                                context); // Recalculate summary after cart update
                           });
                         },
                         child: const Icon(Icons.add,
@@ -318,7 +283,7 @@ class _CartScreenState extends State<CartScreen> {
                   side: const BorderSide(color: Colors.grey),
                 ),
                 labelPadding: EdgeInsets.zero,
-                onPressed: () => onTapCookingInstructios(context),
+                onPressed: () => onTapCookingInstructios(context, cartProvider),
                 label: Text(
                   'Add cooking requests',
                   style: AppStyles.getMediumTextStyle(fontSize: 12),
@@ -404,7 +369,8 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         labelPadding: EdgeInsets.zero,
-                        onPressed: () => onTapdeliveryInstructios(context),
+                        onPressed: () =>
+                            onTapdeliveryInstructios(context, cartProvider),
                         label: Text(
                           'Add instructions for delivery partner',
                           style: AppStyles.getMediumTextStyle(fontSize: 12),
@@ -619,7 +585,8 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  void onTapCookingInstructios(BuildContext context) {
+  void onTapCookingInstructios(
+      BuildContext context, CartProvider cartProvider) {
     CustomDialogue().showCustomDialogue(context: context, content: <Widget>[
       Text(
         'Cooking instructions for restaurant',
@@ -631,7 +598,7 @@ class _CartScreenState extends State<CartScreen> {
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: BuildTextFormField(
-          controller: cookingInstruction,
+          controller: cartProvider.cookingInstruction,
           hint: 'Write here',
           maxLines: 5,
           fillColor: Colors.grey.shade200,
@@ -651,7 +618,8 @@ class _CartScreenState extends State<CartScreen> {
     ]);
   }
 
-  void onTapdeliveryInstructios(BuildContext context) {
+  void onTapdeliveryInstructios(
+      BuildContext context, CartProvider cartProvider) {
     CustomDialogue().showCustomDialogue(
       context: context,
       content: <Widget>[
@@ -665,7 +633,7 @@ class _CartScreenState extends State<CartScreen> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: BuildTextFormField(
-            controller: deliveryInstruction,
+            controller: cartProvider.deliveryInstruction,
             hint: 'Write here',
             maxLines: 5,
             fillColor: Colors.grey.shade200,
@@ -789,7 +757,8 @@ class _CartScreenState extends State<CartScreen> {
                         });
                         log('Selected Address ID: $_selectedAddressId');
                         context.pop(); // Close the dialog after selection
-                        _loadInitialPriceSummary(); // Recalculate summary after address selection
+                        context.read<CartProvider>().loadInitialPriceSummary(
+                            context); // Recalculate summary after address selection
                       },
                       title: Text(
                         address.displayName?.toUpperCase() ?? 'NO TITLE',

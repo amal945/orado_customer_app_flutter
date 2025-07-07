@@ -2,8 +2,11 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:orado_customer/services/cart_services.dart'; // Ensure this path is correct
+import 'package:provider/provider.dart';
 import '../../../utilities/debouncer.dart';
+import '../../location/provider/location_provider.dart';
 import '../models/cart_model.dart';
+import 'order_price_summary_controller.dart';
 
 class CartProvider extends ChangeNotifier {
   bool _isLoading = false;
@@ -11,6 +14,9 @@ class CartProvider extends ChangeNotifier {
 
   List<Products> _cartItems = [];
   List<Products> get cartItems => _cartItems;
+
+  final TextEditingController cookingInstruction = TextEditingController();
+  final TextEditingController deliveryInstruction = TextEditingController();
 
   Data? _cartData;
   Data? get cartData => _cartData;
@@ -64,6 +70,33 @@ class CartProvider extends ChangeNotifier {
       notifyListeners();
       log("Error fetching cart: $e");
     }
+  }
+
+  Future<void> loadInitialPriceSummary(BuildContext context) async {
+    final cartProvider = context.read<CartProvider>();
+    final orderController = context.read<OrderPriceSummaryController>();
+    final locationProvider = context.read<LocationProvider>();
+
+    if (cartProvider.cartData?.cartId == null) {
+      log('Cart ID is null, cannot load price summary.');
+      return;
+    }
+
+    final location = await locationProvider.currentLocationLatLng;
+
+    if (location == null ||
+        location.latitude == null ||
+        location.longitude == null) {
+      log("Unable to fetch current location for price summary.");
+      return;
+    }
+
+    await orderController.loadPriceSummary(
+      longitude: location.longitude.toString(),
+      latitude: location.latitude.toString(),
+      cartId: cartProvider.cartData!.cartId!,
+    );
+    notifyListeners();
   }
 
   void addToCart({

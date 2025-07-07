@@ -9,7 +9,6 @@ import 'package:orado_customer/features/location/provider/location_provider.dart
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
 import 'package:orado_customer/utilities/common/scaffold_builder.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utilities/common/categories_section.dart';
 import '../../../utilities/common/custom_sliver_app_bar.dart';
 import '../../../utilities/common/food_tile_card_large.dart';
@@ -17,7 +16,6 @@ import '../../../utilities/common/food_tile_card_small.dart';
 import '../../../utilities/common/loading_widget.dart';
 import '../../../utilities/common/search_field.dart';
 import '../../../utilities/utilities.dart';
-import '../models/home_model.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -32,14 +30,28 @@ class _HomeState extends State<Home> {
   int categoryIndex = 0;
   String _searchQuery = '';
 
+
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future.delayed(Duration(seconds: 1));
       await context.read<HomeProvider>().getHome(context);
+      // showOrderStatusBottomSheet(context);
+      // simulateSocketStatusUpdates(); // mock live updates
     });
   }
+  void simulateSocketStatusUpdates() async {
+    for (int i = 0; i < orderStatuses.length; i++) {
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        _statusIndex = i;
+        _bottomSheetSetState?.call(() {}); // trigger UI update
+      }
+    }
+  }
+
 
   late HomeProvider homeProvider;
 
@@ -54,10 +66,101 @@ class _HomeState extends State<Home> {
     super.dispose();
   }
 
+  final List<String> orderStatuses = [
+    "Order Placed",
+    "Order Confirmed",
+    "Order Prepared",
+    "Waiting for Pickup",
+    "Delivery Partner Assigned",
+    "Order Picked Up",
+    "On the Way",
+    "On Time",
+    "Delayed",
+    "Nearby",
+    "Reaching Your Doorstep"
+  ];
+
+  int _statusIndex = 0;
+  void Function(VoidCallback)? _bottomSheetSetState;
+
+  void showOrderStatusBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.3,
+          minChildSize: 0.2,
+          maxChildSize: 0.4,
+          builder: (_, controller) {
+            return StatefulBuilder(
+              builder: (context, setState) {
+                _bottomSheetSetState = setState;
+                final currentStatus = orderStatuses[_statusIndex];
+
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade400,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Live Order Status',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.local_shipping,
+                            color: Colors.blue,
+                            size: 32,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              currentStatus,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+
   String address = 'Fetching...';
 
   @override
   Widget build(BuildContext context) {
+
     return ScaffoldBuilder(
       route: Home.route,
       body: Consumer<HomeProvider>(builder: (context, provider, _) {
