@@ -7,6 +7,7 @@ import 'package:orado_customer/features/cart/presentation/order_status_screen.da
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/cart/provider/order_price_summary_controller.dart';
 import 'package:orado_customer/features/cart/provider/order_provider.dart';
+import 'package:orado_customer/features/location/models/address_response_model.dart';
 import 'package:orado_customer/features/location/presentation/address_screen.dart'; // Unused import, consider removing
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/location/provider/address_provider.dart';
@@ -39,14 +40,14 @@ class _CartScreenState extends State<CartScreen> {
   int paymentMethod = 1; // 0 for Razorpay, 1 for Cash on Delivery
 
   // Added to keep track of the selected address ID
-  String? _selectedAddressId;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CartProvider>().getAllCart();
-      context.read<CartProvider>().loadInitialPriceSummary(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) async{
+    await  context.read<CartProvider>().getAllCart();
+     await  context.read<CartProvider>().loadInitialPriceSummary(context);
+     await  context.read<CartProvider>().getAllAddress();
     });
   }
 
@@ -120,7 +121,7 @@ class _CartScreenState extends State<CartScreen> {
                             return;
                           }
 
-                          if (_selectedAddressId == null) {
+                          if (cartProvider.selectedAddressId == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text(
@@ -134,7 +135,7 @@ class _CartScreenState extends State<CartScreen> {
                               await PlaceOrderController.placeOrder(
                             context: context,
                             cartId: cartProvider.cartData!.cartId!,
-                            addressId: _selectedAddressId!,
+                            addressId: cartProvider.selectedAddressId!,
                             paymentMethod:
                                 paymentMethod == 0 ? "razorpay" : "cash",
                             couponCode: "",
@@ -350,10 +351,17 @@ class _CartScreenState extends State<CartScreen> {
                         style: AppStyles.getMediumTextStyle(fontSize: 13),
                       ),
                       subtitle: Text(
-                        context
-                                .watch<LocationProvider>()
-                                .currentLocationAddress ??
-                            '',
+                        cartProvider.addresses
+                                .firstWhere(
+                                  (address) =>
+                                      address.addressId ==
+                                      cartProvider.selectedAddressId,
+                                  orElse: () => Addresses(),
+                                )
+                                .addressString ??
+                            context
+                                .read<LocationProvider>()
+                                .currentLocationAddress!,
                         style: AppStyles.getMediumTextStyle(fontSize: 13),
                       ),
                     ),
@@ -688,10 +696,8 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void onTapDeliveryAddress(BuildContext context) {
-    final addressProvider =
-        Provider.of<AddressProvider>(context, listen: false);
-    addressProvider.getAllAddress(); // Fetch addresses when dialog opens
-
+    // Fetch addresses when dialog opens
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
     CustomDialogue().showCustomDialogue(
       context: context,
       content: [
@@ -728,7 +734,7 @@ class _CartScreenState extends State<CartScreen> {
         Text('Saved Address',
             style: AppStyles.getSemiBoldTextStyle(fontSize: 14)),
         const SizedBox(height: 10),
-        Consumer<AddressProvider>(
+        Consumer<CartProvider>(
           builder: (context, provider, _) {
             if (provider.isLoading) {
               return const Center(child: CircularProgressIndicator());
@@ -750,12 +756,12 @@ class _CartScreenState extends State<CartScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 7),
                     child: RadioListTile<String>(
                       value: id,
-                      groupValue: _selectedAddressId,
+                      groupValue: cartProvider.selectedAddressId,
                       onChanged: (String? value) {
-                        setState(() {
-                          _selectedAddressId = value;
-                        });
-                        log('Selected Address ID: $_selectedAddressId');
+                        if (value != null) {
+                          provider.changeAddressId(newAddressId: value!);
+                        }
+
                         context.pop(); // Close the dialog after selection
                         context.read<CartProvider>().loadInitialPriceSummary(
                             context); // Recalculate summary after address selection

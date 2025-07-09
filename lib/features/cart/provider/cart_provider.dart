@@ -3,28 +3,59 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:orado_customer/services/cart_services.dart'; // Ensure this path is correct
 import 'package:provider/provider.dart';
+import '../../../services/address_services.dart';
 import '../../../utilities/debouncer.dart';
+import '../../location/models/address_response_model.dart';
 import '../../location/provider/location_provider.dart';
 import '../models/cart_model.dart';
 import 'order_price_summary_controller.dart';
 
 class CartProvider extends ChangeNotifier {
   bool _isLoading = false;
+
   bool get isLoading => _isLoading;
 
   List<Products> _cartItems = [];
+
   List<Products> get cartItems => _cartItems;
 
   final TextEditingController cookingInstruction = TextEditingController();
   final TextEditingController deliveryInstruction = TextEditingController();
 
+  String? selectedAddressId;
+
   Data? _cartData;
+
   Data? get cartData => _cartData;
 
   final _debouncers = <String, Debouncer>{};
 
+  List<Addresses> addresses = [];
+
+  Future<void> getAllAddress() async {
+    toggleLoading();
+    try {
+      final response = await AddressServices.getAllAddresses();
+
+      if (response.messageType != null && response.messageType == "success") {
+        addresses.clear();
+        addresses.addAll(response.addresses ?? []);
+      }
+    } catch (e) {}
+
+    notifyListeners();
+
+    toggleLoading();
+
+  }
+
   void putLoading(bool value) {
     _isLoading = value;
+    notifyListeners();
+  }
+
+  void changeAddressId({required String newAddressId}) {
+    selectedAddressId = newAddressId;
     notifyListeners();
   }
 

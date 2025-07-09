@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/auth/presentation/get_started_screen.dart';
 import 'package:orado_customer/features/profile/presentation/edit_profile_screen.dart';
-import 'package:orado_customer/features/profile/presentation/order_history.dart';
 import 'package:orado_customer/features/profile/provider/profile_provider.dart';
 import 'package:orado_customer/utilities/common/custom_coloured_button.dart';
 import 'package:orado_customer/utilities/utilities.dart';
@@ -112,30 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          _cardTitle('Food Orders'),
-          const SizedBox(height: 16),
-          Card(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 2,
-            child: Column(
-              children: [
-                ListTile(
-                  minVerticalPadding: 20,
-                  onTap: () {
-                    context.pushNamed(OrderHistory.route);
-                  },
-                  leading: Icon(Icons.food_bank_outlined,
-                      color: AppColors.baseColor),
-                  title: Text('Your Orders',
-                      style: AppStyles.getBoldTextStyle(fontSize: 20)),
-                  trailing: Icon(Icons.arrow_forward_ios,
-                      color: AppColors.baseColor, size: 16),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
+
           _cardTitle('More'),
           const SizedBox(height: 16),
           Card(
