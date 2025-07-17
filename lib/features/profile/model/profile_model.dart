@@ -2,7 +2,7 @@ class ProfileModel {
   bool? success;
   String? message;
   String? messageType;
-  Data? data;
+  ProfileData? data;
 
   ProfileModel({this.success, this.message, this.messageType, this.data});
 
@@ -10,7 +10,7 @@ class ProfileModel {
     success = json['success'];
     message = json['message'];
     messageType = json['messageType'];
-    data = json['data'] != null ? Data.fromJson(json['data']) : null;
+    data = json['data'] != null ? ProfileData.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -30,7 +30,7 @@ class ProfileModel {
   }
 }
 
-class Data {
+class ProfileData {
   String? userId;
   String? name;
   String? email;
@@ -45,7 +45,7 @@ class Data {
   String? createdAt;
   String? updatedAt;
 
-  Data({
+  ProfileData({
     this.userId,
     this.name,
     this.email,
@@ -61,7 +61,7 @@ class Data {
     this.updatedAt,
   });
 
-  Data.fromJson(Map<String, dynamic> json) {
+  ProfileData.fromJson(Map<String, dynamic> json) {
     userId = json['userId'];
     name = json['name'];
     email = json['email'];

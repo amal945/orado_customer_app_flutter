@@ -303,11 +303,15 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.baseColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back,color: Colors.white,),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text("Select delivery location",
-            style: AppStyles.getBoldTextStyle(fontSize: 15,color: Colors.white)),
+            style:
+                AppStyles.getBoldTextStyle(fontSize: 15, color: Colors.white)),
         centerTitle: true,
       ),
       body: Consumer<LocationProvider>(
@@ -343,10 +347,10 @@ class _MapScreenState extends State<MapScreen> {
                   _mapController = controller;
 
                   // Load custom map style from assets
-                  String style = await rootBundle.loadString('assets/map_style.json');
+                  String style =
+                      await rootBundle.loadString('assets/map_style.json');
                   _mapController?.setMapStyle(style);
                 },
-
               ),
               Positioned(
                 left: 20,

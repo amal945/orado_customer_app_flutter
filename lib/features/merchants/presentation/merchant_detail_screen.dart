@@ -8,6 +8,7 @@ import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/merchants/models/product_model.dart';
 import 'package:orado_customer/features/merchants/provider/merchant_provider.dart';
+import 'package:orado_customer/utilities/placeholders.dart';
 import 'package:provider/provider.dart';
 
 import '../../../utilities/common/custom_container.dart';
@@ -34,24 +35,16 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final merchantProvider = context.read<MerchantProvider>();
-      merchantProvider.getMerchantDetails(
+      await merchantProvider.getMerchantDetails(
         restaurantId: widget.id!,
         context: context,
       );
-      merchantProvider.getMenu(restaurantId: widget.id!);
-
-      // Ensure filterMenuItems is called after initial data is potentially loaded
-      // and the widget tree is stable.
+      await merchantProvider.getMenu(restaurantId: widget.id!);
       if (widget.query != null && widget.query!.isNotEmpty) {
-        // You can either keep Future.microtask or use Future.delayed for a slight delay.
-        // Future.microtask is generally preferred for "as soon as possible"
-        // without waiting for a full frame. If the error persists,
-        // a small Future.delayed might be necessary, though less ideal.
         Future.microtask(() {
           if (mounted) {
-            // Check if the widget is still mounted before updating state
             merchantProvider.filterMenuItems(widget.query!);
           }
         });
@@ -163,7 +156,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                         height: MediaQuery.sizeOf(context).height / 2.5,
                         width: MediaQuery.sizeOf(context).width,
                         child: CachedNetworkImage(
-                          imageUrl: data.data.image ?? '',
+                          imageUrl:
+                              data.data?.image ?? PlaceHolders.restaurantImage,
                           fit: BoxFit.cover,
                           errorWidget: (context, url, error) =>
                               Icon(Icons.image),
@@ -196,7 +190,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           const SizedBox(height: 30),
                                           Center(
                                             child: Text(
-                                              data.data.name ?? '',
+                                              data.data?.name ?? '',
                                               style: AppStyles.getBoldTextStyle(
                                                 fontSize: 24,
                                               ),
@@ -205,7 +199,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           const SizedBox(height: 5),
                                           Center(
                                             child: Text(
-                                              data.data.address.street ?? '',
+                                              data.data?.address?.street ?? '',
                                               style:
                                                   AppStyles.getMediumTextStyle(
                                                       fontSize: 12),
@@ -222,7 +216,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                                       MainAxisAlignment.center,
                                                   children: <Widget>[
                                                     Text(
-                                                      data.data.rating
+                                                      data.data?.rating
                                                               .toString() ??
                                                           "",
                                                       style: AppStyles
@@ -256,7 +250,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                                   size: 14),
                                               const SizedBox(width: 5),
                                               Text(
-                                                '${data.data.estimatedDeliveryTime} mins . ${data.data.distanceKm}',
+                                                '${data.data?.estimatedDeliveryTime} mins . ${data.data?.distanceKm}',
                                                 style: AppStyles
                                                     .getMediumTextStyle(
                                                   fontSize: 15,
@@ -399,9 +393,12 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
             (sum, item) => sum + (item.quantity ?? 0),
           );
 
-          if (totalItems == 0) {
-            return const SizedBox
-                .shrink(); // Optional: hide bar when cart is empty
+          final bool isSameRestaurant =
+              cartProvider.cartData?.restaurantId == widget.id;
+
+          // Hide the bar if no items OR restaurant doesn't match
+          if (totalItems == 0 || !isSameRestaurant) {
+            return const SizedBox.shrink();
           }
 
           return GestureDetector(

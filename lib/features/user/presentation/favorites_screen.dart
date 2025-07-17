@@ -5,6 +5,7 @@ import 'package:orado_customer/features/user/provider/user_provider.dart';
 import 'package:orado_customer/utilities/colors.dart';
 import 'package:orado_customer/utilities/common/custom_restaurant_tile.dart';
 import 'package:orado_customer/utilities/common/food_tile_card_large.dart';
+import 'package:orado_customer/utilities/common/loading_widget.dart';
 import 'package:orado_customer/utilities/styles.dart';
 import 'package:provider/provider.dart';
 
@@ -12,12 +13,26 @@ import '../../../utilities/common/scaffold_builder.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
+
   static String route = 'favorites';
+
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future.delayed(Duration(seconds: 1));
+      final provider = context.read<UserProvider>();
+      if (mounted) {
+         provider.fetchFavourites();
+      }
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldBuilder(
@@ -41,6 +56,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       ),
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
+
+          if(userProvider.isLoading){
+            return BuildLoadingWidget(
+                withCenter: true, color: AppColors.baseColor);
+          }
+
           if (userProvider.favourites.isEmpty) {
             return Center(
               child: Column(

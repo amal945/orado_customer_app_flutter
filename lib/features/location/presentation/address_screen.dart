@@ -151,59 +151,67 @@ class _AddressScreenState extends State<AddressScreen> {
                 const SizedBox(height: 8),
 
                 /// Saved addresses
-                Expanded(
-                  child: addressProvider.isLoading
-                      ? ListView.builder(
-                          itemCount: 3,
-                          itemBuilder: (_, __) => const ShimmerAddressTile(),
-                        )
-                      : ListView.builder(
-                          itemCount: addressProvider.addresses.length,
-                          itemBuilder: (_, index) {
-                            final data = addressProvider.addresses[index];
-                            final latlng = LatLng(data.location!.latitude!,
-                                data.location!.longitude!);
-                            return GestureDetector(
-                              onTap: () {
-                                context
-                                    .read<AddressProvider>()
-                                    .setLatLongAddress(
-                                        context: context,
-                                        latlng: latlng,
-                                        address: data.addressString!);
-                              },
-                              child: ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: Icon(
-                                  addressIcons[
-                                      data.type?.toLowerCase() ?? "other"],
-                                  color: Colors.grey[800],
-                                ),
-                                title: Text(
-                                  data.displayName ?? "",
-                                  style:
-                                      AppStyles.getBoldTextStyle(fontSize: 15),
-                                ),
-                                subtitle: Padding(
-                                  padding: const EdgeInsets.only(top: 4.0),
-                                  child: Text(
-                                    "${data.street}, ${data.city}, ${data.state}",
-                                    style: AppStyles.getSemiBoldTextStyle(
-                                        fontSize: 15, color: Colors.grey),
-                                  ),
-                                ),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.more_vert),
-                                  onPressed: () {
-                                    showAddressBottomSheet(
-                                        context, data, latlng);
-                                  },
-                                ),
-                              ),
-                            );
-                          },
+                Expanded(child:
+                    Consumer<AddressProvider>(builder: (context, provider, _) {
+                  if (provider.isLoading) {
+                    return ListView.builder(
+                      itemCount: 3,
+                      itemBuilder: (_, __) => const ShimmerAddressTile(),
+                    );
+                  } else if (provider.addresses.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "You haven't added any address",
+                        style: AppStyles.getSemiBoldTextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
                         ),
-                ),
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    itemCount: provider.addresses.length,
+                    itemBuilder: (_, index) {
+                      final data = addressProvider.addresses[index];
+                      final latlng = LatLng(
+                          data.location!.latitude!, data.location!.longitude!);
+                      return GestureDetector(
+                        onTap: () {
+                          addressProvider.setLatLongAddress(
+                              context: context,
+                              latlng: latlng,
+                              address: data.addressString!,
+                              addressId: data.addressId!);
+                        },
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            addressIcons[data.type?.toLowerCase() ?? "other"],
+                            color: Colors.grey[800],
+                          ),
+                          title: Text(
+                            data.displayName ?? "",
+                            style: AppStyles.getBoldTextStyle(fontSize: 15),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              "${data.street}, ${data.city}, ${data.state}",
+                              style: AppStyles.getSemiBoldTextStyle(
+                                  fontSize: 15, color: Colors.grey),
+                            ),
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.more_vert),
+                            onPressed: () {
+                              showAddressBottomSheet(context, data, latlng);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                })),
               ],
             ),
           ),

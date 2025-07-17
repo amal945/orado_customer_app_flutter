@@ -6,7 +6,7 @@ import 'package:orado_customer/utilities/urls.dart';
 import 'package:http/http.dart' as http;
 
 class ProfileServices {
-  static Future<ProfileModel> fetchProfile() async {
+  static Future<ProfileModel?> fetchProfile() async {
     try {
       final token = await LocationProvider.getToken();
 
@@ -28,7 +28,7 @@ class ProfileServices {
       } else {
         print('Failed to fetch profile. Status: ${response.statusCode}');
         print('Response body: ${response.body}');
-        throw Exception("Failed to fetch profile");
+        return null;
       }
     } catch (e) {
       print("Exception in fetchProfile: $e");

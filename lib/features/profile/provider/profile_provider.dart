@@ -27,24 +27,26 @@ class ProfileProvider with ChangeNotifier {
   Future<void> fetchAndUpdateProfile() async {
     try {
       final profileModel = await ProfileServices.fetchProfile();
-      final data = profileModel.data;
-      String? fullAddress;
-      if (data?.addresses != null && data!.addresses!.isNotEmpty) {
-        final addr = data.addresses!.first;
-        fullAddress = [
-          addr.street,
-          addr.city,
-          addr.state,
-          addr.zip,
-        ].where((e) => e != null && e.isNotEmpty).join(', ');
+      if (profileModel != null) {
+        final data = profileModel.data;
+        String? fullAddress;
+        if (data?.addresses != null && data!.addresses!.isNotEmpty) {
+          final addr = data.addresses!.first;
+          fullAddress = [
+            addr.street,
+            addr.city,
+            addr.state,
+            addr.zip,
+          ].where((e) => e != null && e.isNotEmpty).join(', ');
+        }
+        updateUserInfo(
+          newName: data?.name,
+          newEmail: data?.email,
+          newPhone: data?.phone,
+          newAddress: fullAddress ?? '',
+          newImageUrl: data?.profilePicture ?? '',
+        );
       }
-      updateUserInfo(
-        newName: data?.name,
-        newEmail: data?.email,
-        newPhone: data?.phone,
-        newAddress: fullAddress ?? '',
-        newImageUrl: data?.profilePicture ?? '',
-      );
     } catch (e) {
       print("Error fetching profile: $e");
       rethrow;
@@ -59,7 +61,7 @@ class ProfileProvider with ChangeNotifier {
   }) async {
     try {
       final profileModel = ProfileModel(
-        data: Data(
+        data: ProfileData(
           name: name,
           email: email,
           phone: phone,

@@ -63,17 +63,17 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
             ),
           ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: GestureDetector(
-              onTap: () {},
-              child: CircleAvatar(
-                radius: 30,
-                backgroundColor: AppColors.baseColor,
-                child: const Icon(Icons.wallet, color: Colors.white),
-              ),
-            ),
-          ),
+          // Align(
+          //   alignment: Alignment.topCenter,
+          //   child: GestureDetector(
+          //     onTap: () {},
+          //     child: CircleAvatar(
+          //       radius: 30,
+          //       backgroundColor: AppColors.baseColor,
+          //       child: const Icon(Icons.wallet, color: Colors.white),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -83,7 +83,7 @@ class CustomBottomNavBar extends StatelessWidget {
     return IconButton(
       onPressed: () {
         if (route != currentRoute) {
-          context.pushNamed(route);
+          context.goNamed(route);
         }
       },
       icon: Icon(

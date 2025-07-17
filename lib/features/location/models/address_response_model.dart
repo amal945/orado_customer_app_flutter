@@ -1,13 +1,13 @@
-class AddressReponseModel {
+class AddressResponseModel {
   bool? success;
   String? message;
   String? messageType;
   List<Addresses>? addresses;
 
-  AddressReponseModel(
+  AddressResponseModel(
       {this.success, this.message, this.messageType, this.addresses});
 
-  AddressReponseModel.fromJson(Map<String, dynamic> json) {
+  AddressResponseModel.fromJson(Map<String, dynamic> json) {
     success = json['success'];
     message = json['message'];
     messageType = json['messageType'];
@@ -49,19 +49,19 @@ class Addresses {
 
   Addresses(
       {this.addressId,
-        this.type,
-        this.displayName,
-        this.street,
-        this.area,
-        this.city,
-        this.state,
-        this.zip,
-        this.receiverName,
-        this.receiverPhone,
-        this.directionsToReach,
-        this.isDefault,
-        this.location,
-        this.addressString});
+      this.type,
+      this.displayName,
+      this.street,
+      this.area,
+      this.city,
+      this.state,
+      this.zip,
+      this.receiverName,
+      this.receiverPhone,
+      this.directionsToReach,
+      this.isDefault,
+      this.location,
+      this.addressString});
 
   Addresses.fromJson(Map<String, dynamic> json) {
     addressId = json['addressId'];
@@ -111,14 +111,24 @@ class Location {
   Location({this.latitude, this.longitude});
 
   Location.fromJson(Map<String, dynamic> json) {
-    latitude = json['latitude'];
-    longitude = json['longitude'];
+    latitude = _toDouble(json['latitude']);
+    longitude = _toDouble(json['longitude']);
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
+    final Map<String, dynamic> data = {};
     data['latitude'] = this.latitude;
     data['longitude'] = this.longitude;
     return data;
   }
+
+  /// Helper to handle int or double
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
 }
+

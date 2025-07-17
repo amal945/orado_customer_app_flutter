@@ -8,6 +8,7 @@ import 'package:orado_customer/features/home/models/recommended_restaurant_model
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/services/api_services.dart';
 import 'package:orado_customer/services/home_service.dart';
+import 'package:orado_customer/services/order_service.dart';
 import 'package:orado_customer/utilities/utilities.dart';
 import 'package:provider/provider.dart';
 
@@ -99,6 +100,14 @@ class HomeProvider extends ChangeNotifier {
               .addAll(recommendedRestaurantResponse.data ?? []);
           notifyListeners();
         }
+
+
+        final activeOrderResponse = await OrderService.getActiveOrder();
+
+        if(activeOrderResponse != null){
+
+        }
+
       } else {
         showSnackBar(context,
             message: "Failed to Fetch Location", backgroundColor: Colors.red);

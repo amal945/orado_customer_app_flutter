@@ -11,12 +11,10 @@ import '../features/merchants/models/merchant_detail_model.dart';
 
 class RestaurantServices {
   static Future<MerchantDetailModel> getMerchantDetails(
-      {required String restaurantId,required LatLng latlng}) async {
+      {required String restaurantId, required LatLng latlng}) async {
     try {
-      final token = await LocationProvider.getToken();
-
-
-      final url = Uri.parse("${Urls.baserUrl}restaurants/$restaurantId?lat=${latlng.latitude}&lng=${latlng.longitude}");
+      final url = Uri.parse(
+          "${Urls.baserUrl}restaurants/$restaurantId?lat=${latlng.latitude}&lng=${latlng.longitude}");
 
       final response = await http.get(url);
 

@@ -21,6 +21,8 @@ class LocationProvider extends ChangeNotifier {
   LatLng? currentLocationLatLng;
   String? currentLocationAddress;
 
+  String? selectedAddressId;
+
   final Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
 
   putLoading(bool value) {
@@ -28,10 +30,13 @@ class LocationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setLatLongAndAddress(
-      {required double latitude,
-      required double longitude,
-      String? address}) async {
+  Future<void> setLatLongAndAddress({
+    required double latitude,
+    required double longitude,
+    String? address,
+    String? addressId,
+  }) async {
+    this.selectedAddressId = addressId;
     currentLocationLatLng = LatLng(latitude, longitude);
     if (address == null) {
       List<Placemark> placemarks =
@@ -41,7 +46,7 @@ class LocationProvider extends ChangeNotifier {
         currentLocationAddress =
             '${place.name}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
       }
-    }else{
+    } else {
       currentLocationAddress = address;
     }
   }

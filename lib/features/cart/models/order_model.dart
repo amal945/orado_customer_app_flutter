@@ -1,62 +1,40 @@
 class PlaceOrderResponseModel {
-  final String? message;
-  final String? orderId;
-  final double? totalAmount;
-  final BillSummary? billSummary;
-  final String? orderStatus;
-  final String? agentAssignmentStatus;
-  final String? messageType;
+  String? message;
+  String? messageType;
+  String? orderId;
+  String? razorpayOrderId;
+  num? amount;
+  String? currency;
+  String? keyId;
 
-  PlaceOrderResponseModel({
-    this.message,
-    this.orderId,
-    this.totalAmount,
-    this.billSummary,
-    this.orderStatus,
-    this.agentAssignmentStatus,
-    this.messageType,
-  });
+  PlaceOrderResponseModel(
+      {this.message,
+        this.messageType,
+        this.orderId,
+        this.razorpayOrderId,
+        this.amount,
+        this.currency,
+        this.keyId});
 
-  factory PlaceOrderResponseModel.fromJson(Map<String, dynamic> json) {
-    return PlaceOrderResponseModel(
-      message: json['message'],
-      orderId: json['orderId'],
-      totalAmount: (json['totalAmount'] as num?)?.toDouble(),
-      billSummary: json['billSummary'] != null
-          ? BillSummary.fromJson(json['billSummary'])
-          : null,
-      orderStatus: json['orderStatus'],
-      agentAssignmentStatus: json['agentAssignmentStatus'],
-      messageType: json['messageType'],
-    );
+  PlaceOrderResponseModel.fromJson(Map<String, dynamic> json) {
+    message = json['message'];
+    messageType = json['messageType'];
+    orderId = json['orderId'];
+    razorpayOrderId = json['razorpayOrderId'];
+    amount = json['amount'];
+    currency = json['currency'];
+    keyId = json['keyId'];
   }
-}
 
-class BillSummary {
-  final double? subtotal;
-  final double? discount;
-  final double? tax;
-  final double? deliveryFee;
-  final double? total;
-  final double? distanceKm;
-
-  BillSummary({
-    this.subtotal,
-    this.discount,
-    this.tax,
-    this.deliveryFee,
-    this.total,
-    this.distanceKm,
-  });
-
-  factory BillSummary.fromJson(Map<String, dynamic> json) {
-    return BillSummary(
-      subtotal: (json['subtotal'] as num?)?.toDouble(),
-      discount: (json['discount'] as num?)?.toDouble(),
-      tax: (json['tax'] as num?)?.toDouble(),
-      deliveryFee: (json['deliveryFee'] as num?)?.toDouble(),
-      total: (json['total'] as num?)?.toDouble(),
-      distanceKm: (json['distanceKm'] as num?)?.toDouble(),
-    );
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['message'] = this.message;
+    data['messageType'] = this.messageType;
+    data['orderId'] = this.orderId;
+    data['razorpayOrderId'] = this.razorpayOrderId;
+    data['amount'] = this.amount;
+    data['currency'] = this.currency;
+    data['keyId'] = this.keyId;
+    return data;
   }
 }

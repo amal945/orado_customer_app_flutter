@@ -30,8 +30,6 @@ class _HomeState extends State<Home> {
   int categoryIndex = 0;
   String _searchQuery = '';
 
-
-
   @override
   void initState() {
     super.initState();
@@ -42,6 +40,7 @@ class _HomeState extends State<Home> {
       // simulateSocketStatusUpdates(); // mock live updates
     });
   }
+
   void simulateSocketStatusUpdates() async {
     for (int i = 0; i < orderStatuses.length; i++) {
       await Future.delayed(const Duration(seconds: 2));
@@ -51,7 +50,6 @@ class _HomeState extends State<Home> {
       }
     }
   }
-
 
   late HomeProvider homeProvider;
 
@@ -103,7 +101,8 @@ class _HomeState extends State<Home> {
                   duration: const Duration(milliseconds: 500),
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(24)),
                   ),
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -155,12 +154,10 @@ class _HomeState extends State<Home> {
     );
   }
 
-
   String address = 'Fetching...';
 
   @override
   Widget build(BuildContext context) {
-
     return ScaffoldBuilder(
       route: Home.route,
       body: Consumer<HomeProvider>(builder: (context, provider, _) {

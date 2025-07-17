@@ -1,19 +1,19 @@
 class MerchantDetailModel {
-  final String messageType;
-  final String message;
-  final RestaurantData data;
+  final String? messageType;
+  final String? message;
+  final RestaurantData? data;
 
   MerchantDetailModel({
-    required this.messageType,
-    required this.message,
-    required this.data,
+    this.messageType,
+    this.message,
+    this.data,
   });
 
   factory MerchantDetailModel.fromJson(Map<String, dynamic> json) {
     return MerchantDetailModel(
       messageType: json['messageType'],
       message: json['message'],
-      data: RestaurantData.fromJson(json['data']),
+      data: json['data'] != null ? RestaurantData.fromJson(json['data']) : null,
     );
   }
 
@@ -21,66 +21,66 @@ class MerchantDetailModel {
     return {
       'messageType': messageType,
       'message': message,
-      'data': data.toJson(),
+      'data': data?.toJson(),
     };
   }
 }
 
 class RestaurantData {
-  final String id;
-  final String name;
-  final List<String> images;
-  final MerchantAddress address;
-  final MerchantLocation location;
-  final String phone;
-  final String email;
-  final List<dynamic> offers;
-  final bool active;
-  final String foodType;
-  final List<dynamic> banners;
-  final int rating;
-  final int minOrderAmount;
-  final List<String> paymentMethods;
-  final String image;
-  final String distanceKm;
-  final String estimatedDeliveryTime;
+  final String? id;
+  final String? name;
+  final List<String>? images;
+  final MerchantAddress? address;
+  final MerchantLocation? location;
+  final String? phone;
+  final String? email;
+  final List<dynamic>? offers;
+  final bool? active;
+  final String? foodType;
+  final List<dynamic>? banners;
+  final int? rating;
+  final int? minOrderAmount;
+  final List<String>? paymentMethods;
+  final String? image;
+  final String? distanceKm;
+  final String? estimatedDeliveryTime;
 
   RestaurantData({
-    required this.id,
-    required this.name,
-    required this.images,
-    required this.address,
-    required this.location,
-    required this.phone,
-    required this.email,
-    required this.offers,
-    required this.active,
-    required this.foodType,
-    required this.banners,
-    required this.rating,
-    required this.minOrderAmount,
-    required this.paymentMethods,
-    required this.image,
-    required this.distanceKm,
-    required this.estimatedDeliveryTime,
+    this.id,
+    this.name,
+    this.images,
+    this.address,
+    this.location,
+    this.phone,
+    this.email,
+    this.offers,
+    this.active,
+    this.foodType,
+    this.banners,
+    this.rating,
+    this.minOrderAmount,
+    this.paymentMethods,
+    this.image,
+    this.distanceKm,
+    this.estimatedDeliveryTime,
   });
 
   factory RestaurantData.fromJson(Map<String, dynamic> json) {
     return RestaurantData(
       id: json['_id'],
       name: json['name'],
-      images: List<String>.from(json['images']),
-      address: MerchantAddress.fromJson(json['address']),
-      location: MerchantLocation.fromJson(json['location']),
+      images: (json['images'] as List?)?.map((e) => e.toString()).toList(),
+      address: json['address'] != null ? MerchantAddress.fromJson(json['address']) : null,
+      location: json['location'] != null ? MerchantLocation.fromJson(json['location']) : null,
       phone: json['phone'],
       email: json['email'],
-      offers: List<dynamic>.from(json['offers']),
+      offers: json['offers'] ?? [],
       active: json['active'],
       foodType: json['foodType'],
-      banners: List<dynamic>.from(json['banners']),
+      banners: json['banners'] ?? [],
       rating: json['rating'],
       minOrderAmount: json['minOrderAmount'],
-      paymentMethods: List<String>.from(json['paymentMethods']),
+      paymentMethods: (json['paymentMethods'] as List?)?.map((e) => e.toString()).toList(),
       image: json['image'],
       distanceKm: json['distanceKm'],
       estimatedDeliveryTime: json['estimatedDeliveryTime'],
@@ -92,8 +92,8 @@ class RestaurantData {
       '_id': id,
       'name': name,
       'images': images,
-      'address': address.toJson(),
-      'location': location.toJson(),
+      'address': address?.toJson(),
+      'location': location?.toJson(),
       'phone': phone,
       'email': email,
       'offers': offers,
@@ -111,16 +111,18 @@ class RestaurantData {
 }
 
 class MerchantAddress {
-  final String street;
-  final String city;
-  final String state;
-  final String zip;
+  final String? street;
+  final String? city;
+  final String? state;
+  final String? zip;
+  final String? country;
 
   MerchantAddress({
-    required this.street,
-    required this.city,
-    required this.state,
-    required this.zip,
+    this.street,
+    this.city,
+    this.state,
+    this.zip,
+    this.country,
   });
 
   factory MerchantAddress.fromJson(Map<String, dynamic> json) {
@@ -129,6 +131,7 @@ class MerchantAddress {
       city: json['city'],
       state: json['state'],
       zip: json['zip'],
+      country: json['country'],
     );
   }
 
@@ -138,6 +141,7 @@ class MerchantAddress {
       'city': city,
       'state': state,
       'zip': zip,
+      'country': country,
     };
   }
 }
@@ -154,7 +158,8 @@ class MerchantLocation {
   factory MerchantLocation.fromJson(Map<String, dynamic> json) {
     return MerchantLocation(
       type: json['type'],
-      coordinates: List<double>.from(json['coordinates'].map((x) => x.toDouble())),
+      coordinates:
+      List<double>.from(json['coordinates'].map((x) => x.toDouble())),
     );
   }
 

@@ -98,7 +98,8 @@ class MapScreenProvider extends ChangeNotifier {
 
       if (response.messageType != null && response.messageType == "success") {
         // context.read<AddressProvider>().getAllAddress();
-        context.goNamed(AddressScreen.route);
+        context.pop();
+        context.read<AddressProvider>().getAllAddress();
         showSnackBar(context,
             message: response.message!, backgroundColor: Colors.green);
       }

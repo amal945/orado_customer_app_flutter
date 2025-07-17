@@ -63,7 +63,7 @@ class FoodsListingCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
                               Text(
-                                product.name,
+                                product.name ?? "",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
@@ -112,8 +112,9 @@ class FoodsListingCard extends StatelessWidget {
                               ),
                               child: CachedNetworkImage(
                                 fit: BoxFit.cover,
-                                imageUrl: product.images.isNotEmpty
-                                    ? product.images.first
+                                imageUrl: product.images!.isNotEmpty &&
+                                        product.images != null
+                                    ? product.images!.first
                                     : 'https://via.placeholder.com/150',
                                 placeholder: (context, url) => const Center(
                                     child: CircularProgressIndicator()),
@@ -144,10 +145,11 @@ class FoodsListingCard extends StatelessWidget {
                                                       provider.addToCart(
                                                           restaurantId:
                                                               restaurantId,
-                                                          productId: product.id,
+                                                          productId:
+                                                              product.id!,
                                                           quantity:
-                                                              quantity - 1);
-                                                      quantity--;
+                                                              quantity - 1,
+                                                          context: context);
                                                     },
                                               child: const Icon(Icons.remove,
                                                   size: 19,
@@ -171,10 +173,11 @@ class FoodsListingCard extends StatelessWidget {
                                                       provider.addToCart(
                                                           restaurantId:
                                                               restaurantId,
-                                                          productId: product.id,
+                                                          productId:
+                                                              product.id!,
                                                           quantity:
-                                                              quantity + 1);
-                                                      quantity++;
+                                                              quantity + 1,
+                                                          context: context);
                                                     },
                                               child: const Icon(Icons.add,
                                                   size: 19,
@@ -199,8 +202,9 @@ class FoodsListingCard extends StatelessWidget {
                                                   provider.addToCart(
                                                       restaurantId:
                                                           restaurantId,
-                                                      productId: product.id,
-                                                      quantity: 1);
+                                                      productId: product.id!,
+                                                      quantity: 1,
+                                                      context: context);
                                                 },
                                           icon: const Icon(Icons.add,
                                               color: Colors.white),

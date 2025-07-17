@@ -1,13 +1,13 @@
 import 'dart:convert';
-
 import 'package:orado_customer/features/auth/model/global_response_model.dart';
-import 'package:orado_customer/features/location/models/address_response_model.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/utilities/urls.dart';
 import 'package:http/http.dart' as http;
 
+import '../features/location/models/address_response_model.dart';
+
 class AddressServices {
-  static Future<AddressReponseModel> getAllAddresses() async {
+  static Future<AddressResponseModel?> getAllAddresses() async {
     try {
       final token = await LocationProvider.getToken();
 
@@ -20,15 +20,15 @@ class AddressServices {
           'Content-Type': 'application/json',
         },
       );
-
+      final json = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        final data = AddressReponseModel.fromJson(json);
+
+        final data = AddressResponseModel.fromJson(json);
+        print(data);
         return data;
       } else {
-        final json = jsonDecode(response.body);
-        final data = AddressReponseModel.fromJson(json);
-        return data;
+
+        return null;
       }
     } catch (e) {
       rethrow;

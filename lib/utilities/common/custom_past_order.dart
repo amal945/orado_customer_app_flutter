@@ -8,7 +8,7 @@ class CustomPastOrder extends StatelessWidget {
   final String price;
   final String items;
   final String time;
-  final bool isDelivered;
+  final String isDelivered;
 
   const CustomPastOrder({
     super.key,
@@ -22,7 +22,6 @@ class CustomPastOrder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDelivered = true;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       elevation: 2,
@@ -38,16 +37,15 @@ class CustomPastOrder extends StatelessWidget {
                   restaurantName,
                   style: AppStyles.getBoldTextStyle(fontSize: 16),
                 ),
-                if (isDelivered)
-                  Row(
-                    children: [
-                      Text("Delivered",
-                          style: AppStyles.getRegularTextStyle(
-                              color: Colors.green, fontSize: 12)),
-                      SizedBox(width: 4),
-                      Icon(Icons.check_circle, color: Colors.green, size: 16),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    Text(isDelivered,
+                        style: AppStyles.getRegularTextStyle(
+                            color: Colors.green, fontSize: 12)),
+                    SizedBox(width: 4),
+                    Icon(Icons.check_circle, color: Colors.green, size: 16),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -69,25 +67,28 @@ class CustomPastOrder extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStatePropertyAll<Color>(Colors.red),
+                    ),
                     onPressed: () {},
                     child: Text("REORDER",
                         style: AppStyles.getBoldTextStyle(
-                            color: AppColors.titleTextColor, fontSize: 14)),
+                            color: Colors.white, fontSize: 14,)),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppColors.baseColor),
-                      foregroundColor: AppColors.baseColor,
-                    ),
-                    onPressed: () {},
-                    child: Text("RATE ORDER",
-                        style: AppStyles.getBoldTextStyle(
-                            color: AppColors.baseColor, fontSize: 14)),
-                  ),
-                ),
+                // const SizedBox(width: 10),
+                // Expanded(
+                //   child: OutlinedButton(
+                //     style: OutlinedButton.styleFrom(
+                //       side: BorderSide(color: AppColors.baseColor),
+                //       foregroundColor: AppColors.baseColor,
+                //     ),
+                //     onPressed: () {},
+                //     child: Text("RATE ORDER",
+                //         style: AppStyles.getBoldTextStyle(
+                //             color: AppColors.baseColor, fontSize: 14)),
+                //   ),
+                // ),
               ],
             ),
           ],

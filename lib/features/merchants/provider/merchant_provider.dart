@@ -78,7 +78,9 @@ class MerchantProvider extends ChangeNotifier {
             response.data.menu.expand((category) => category.items).toList();
         menuItems.addAll(data);
       }
-    } catch (e) {}
+    } catch (e) {
+      log("$e");
+    }
     putLoading(false);
   }
 

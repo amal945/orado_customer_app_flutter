@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:orado_customer/features/home/presentation/home_screen.dart';
 import 'package:orado_customer/features/location/models/address_response_model.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/services/address_services.dart';
@@ -19,9 +20,12 @@ class AddressProvider extends ChangeNotifier {
     try {
       final response = await AddressServices.getAllAddresses();
 
-      if (response.messageType != null && response.messageType == "success") {
+      print(response?.addresses ?? "Empty");
+
+      if (response != null && response.addresses != null) {
         addresses.clear();
         addresses.addAll(response.addresses ?? []);
+        notifyListeners();
       }
     } catch (e) {}
 
@@ -47,17 +51,20 @@ class AddressProvider extends ChangeNotifier {
     toggleLoading();
   }
 
-  Future<void> setLatLongAddress(
-      {required BuildContext context,
-      required LatLng latlng,
-      required String address}) async {
+  Future<void> setLatLongAddress({
+    required BuildContext context,
+    required LatLng latlng,
+    required String address,
+    required String addressId,
+  }) async {
     toggleLoading();
     await context.read<LocationProvider>().setLatLongAndAddress(
         latitude: latlng.latitude,
         longitude: latlng.longitude,
-        address: address);
+        address: address,
+        addressId: addressId);
     toggleLoading();
-    context.pop();
+    context.goNamed(Home.route);
   }
 
   toggleLoading() {

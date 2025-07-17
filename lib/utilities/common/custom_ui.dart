@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/utilities/utilities.dart';
 
+import '../../features/home/presentation/home_screen.dart';
 import 'custom_container.dart';
 
 class CustomUi extends StatelessWidget {
@@ -44,27 +45,6 @@ class CustomUi extends StatelessWidget {
       extendBody: true,
       // extendBodyBehindAppBar: true,
       backgroundColor: Colors.white,
-      appBar: isBack
-          ? AppBar(
-              centerTitle: centreTitle,
-              elevation: 0,
-              leading: IconButton(
-                onPressed: () {
-                  context.pop();
-                },
-                icon: const Icon(
-                  Icons.keyboard_arrow_left_outlined,
-                  size: 37,
-                ),
-              ),
-              title: Text(
-                title,
-                style: AppStyles.getSemiBoldTextStyle(fontSize: 19, color: Colors.white),
-              ),
-              iconTheme: const IconThemeData(color: Colors.white),
-              backgroundColor: AppColors.baseColor,
-            )
-          : null,
       body: SingleChildScrollView(
         physics: physics ?? const AlwaysScrollableScrollPhysics(),
         child: Stack(
@@ -106,81 +86,6 @@ class CustomUi extends StatelessWidget {
           ],
         ),
       ),
-
-      //  CustomScrollView(
-      //   slivers: <Widget>[
-      //     if (isBack)
-      //       sliverAppBar ??
-      //           SliverAppBar(
-      //             backgroundColor: AppColors.baseColor,
-      //             foregroundColor: Colors.white,
-      //             expandedHeight: expandedHeight,
-      //             actions: actions,
-      //             leading: isBack
-      //                 ? IconButton(
-      //                     onPressed: () {
-      //                       context.pop();
-      //                     },
-      //                     icon: const Icon(
-      //                       Icons.keyboard_arrow_left_outlined,
-      //                       size: 37,
-      //                     ),
-      //                   )
-      //                 : const SizedBox(),
-      //             pinned: isBack,
-
-      //             iconTheme: const IconThemeData(color: Colors.white),
-      //             // floating: true,
-
-      //             flexibleSpace: flexibleSpaceBar,
-      //             title: Text(
-      //               title,
-      //               style: AppStyles.getSemiBoldTextStyle(fontSize: 19, color: Colors.white),
-      //             ),
-      //           ),
-      //     SliverList(
-      //       delegate: SliverChildListDelegate(
-      //         <Widget>[
-      //           Stack(
-      //             children: <Widget>[
-      //               if (behindImage != null) behindImage!,
-      //               Stack(
-      //                 children: <Widget>[
-      //                   Column(
-      //                     // padding: EdgeInsets.zero,
-      //                     // physics: const NeverScrollableScrollPhysics(),
-      //                     // shrinkWrap: true,
-      //                     // primary: false,
-      //                     children: <Widget>[
-      //                       SizedBox(height: gap ?? MediaQuery.sizeOf(context).height / 40),
-      //                       ClipPath(
-      //                         clipper: CustomContainer(),
-      //                         child: Container(
-      //                           color: Colors.white,
-      //                           height: whitContainerHeight,
-      //                           width: MediaQuery.sizeOf(context).width,
-      //                           padding: padding ?? const EdgeInsets.all(24),
-      //                           child: Column(
-      //                             children: <Widget>[
-      //                               const SizedBox(height: 30),
-      //                               ...children,
-      //                               if (bottomNavigationBar != null) const SizedBox(height: 100) else const SizedBox(height: 30)
-      //                             ],
-      //                           ),
-      //                         ),
-      //                       ),
-      //                     ],
-      //                   ),
-      //                   if (topIcon != null) topIcon!
-      //                 ],
-      //               ),
-      //             ],
-      //           )
-      //         ],
-      //       ),
-      //     ),
-      //   ],
-      // ),
       bottomNavigationBar: bottomNavigationBar,
     );
   }
