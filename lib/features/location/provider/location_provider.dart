@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'package:geocoding/geocoding.dart' hide Location;
-import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -10,9 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utilities/utilities.dart';
 
 class LocationProvider extends ChangeNotifier {
-  bool _isloading = false;
+  bool _isLoading = false;
 
-  bool get isloading => _isloading;
+  bool get isloading => _isLoading;
 
   late PermissionStatus _permissionGranted;
   late bool _serviceEnabled;
@@ -20,13 +19,12 @@ class LocationProvider extends ChangeNotifier {
 
   LatLng? currentLocationLatLng;
   String? currentLocationAddress;
-
   String? selectedAddressId;
 
   final Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
 
-  putLoading(bool value) {
-    _isloading = value;
+  void putLoading(bool value) {
+    _isLoading = value;
     notifyListeners();
   }
 
@@ -36,108 +34,119 @@ class LocationProvider extends ChangeNotifier {
     String? address,
     String? addressId,
   }) async {
-    this.selectedAddressId = addressId;
+    selectedAddressId = addressId;
     currentLocationLatLng = LatLng(latitude, longitude);
-    if (address == null) {
-      List<Placemark> placemarks =
-          await placemarkFromCoordinates(latitude, longitude);
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        currentLocationAddress =
-            '${place.name}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
-      }
-    } else {
+
+    if (address != null) {
       currentLocationAddress = address;
+    } else {
+      currentLocationAddress = await _getAddressFromLatLng(latitude, longitude);
     }
+
+    notifyListeners();
   }
 
-  static Future<String> getToken() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    final token = preferences.getString("token");
+  static Future<String> getToken() async => SharedPreferences.getInstance()
+      .then((prefs) => prefs.getString("token") ?? "");
 
-    return token ?? "";
-  }
-
-  static Future<String> getUserId() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    final token = preferences.getString("userId");
-
-    return token ?? "";
-  }
+  static Future<String> getUserId() async => SharedPreferences.getInstance()
+      .then((prefs) => prefs.getString("userId") ?? "");
 
   Future<void> getCurrentLocation(BuildContext context) async {
     if (_isRequestingLocation) return;
     _isRequestingLocation = true;
-
     final stopwatch = Stopwatch()..start();
-
-    Location location = Location();
-    LocationData? currentLocation;
-
     try {
-      _serviceEnabled = await location.serviceEnabled();
-      if (!_serviceEnabled) {
-        _serviceEnabled = await location.requestService();
-        if (!_serviceEnabled) {
-          _isRequestingLocation = false;
-          return;
-        }
-      }
+      log("⏳ Requesting location (Location + Geolocator fallback)");
 
+
+      final location = Location();
+
+      // Ensure service is enabled
+      _serviceEnabled = await location.serviceEnabled();
+      if (!_serviceEnabled) _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) return;
+
+      // Ensure permission is granted
       _permissionGranted = await location.hasPermission();
       if (_permissionGranted == PermissionStatus.denied) {
         _permissionGranted = await location.requestPermission();
-        if (_permissionGranted != PermissionStatus.granted) {
-          _isRequestingLocation = false;
-          return;
-        }
+      }
+      if (_permissionGranted != PermissionStatus.granted) return;
+
+      final locationFuture = location.getLocation().catchError((e) {
+        log(" Location package error: $e");
+        return null;
+      });
+
+      final geoFuture = geo.Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.medium,
+      ).catchError((e) {
+        log(" Geolocator error: $e");
+        return null;
+      });
+
+      final result = await Future.any([locationFuture, geoFuture]);
+
+      if (result is LocationData &&
+          result.latitude != null &&
+          result.longitude != null) {
+        log(" Fetched from Location");
+        currentLocationLatLng = LatLng(result.latitude!, result.longitude!);
+      } else if (result is geo.Position) {
+        log(" Fetched from Geolocator");
+        currentLocationLatLng = LatLng(result.latitude, result.longitude);
+      } else {
+        log(" No valid location from either source");
       }
 
-      log("Fetching location...");
-      currentLocation = await location.getLocation();
-      stopwatch.stop();
-
-      log("Location fetch time: ${stopwatch.elapsedMilliseconds} ms");
-      log("Got location: ${currentLocation.latitude}, ${currentLocation.longitude}");
-
-      currentLocationLatLng =
-          LatLng(currentLocation.latitude!, currentLocation.longitude!);
-      final lat = currentLocation.latitude!;
-      final lng = currentLocation.longitude!;
-      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
-      if (placemarks.isNotEmpty) {
-        final place = placemarks.first;
-        currentLocationAddress =
-            '${place.name}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
+      if (currentLocationLatLng != null) {
+        currentLocationAddress = await _getAddressFromLatLng(
+          currentLocationLatLng!.latitude,
+          currentLocationLatLng!.longitude,
+        );
+        notifyListeners();
       }
     } catch (e) {
-      log("Location error: $e");
-      currentLocation = null;
+      log("❌ Location fetch failed: $e");
+    } finally {
+      stopwatch.stop();
+      log("⏱️ Location fetch took ${stopwatch.elapsedMilliseconds} ms");
+      _isRequestingLocation = false;
     }
-
-    _isRequestingLocation = false;
-    notifyListeners();
   }
 
-  FutureOr<void> addMarker(LatLng latLng) async {
+  Future<String> _getAddressFromLatLng(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        return '${p.name}, ${p.subLocality}, ${p.locality}, ${p.administrativeArea}, ${p.country}';
+      }
+    } catch (e) {
+      log("❌ Reverse geocoding failed: $e");
+    }
+    return "Unknown Location";
+  }
+
+  Future<void> addMarker(LatLng latLng) async {
     const String markerIdVal = 'Delivery Location';
     const MarkerId markerId = MarkerId(markerIdVal);
-    final Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
     final BitmapDescriptor icon = BitmapDescriptor.bytes(
       await getBytesFromAsset('assets/images/location.png', 25),
     );
-    final Marker marker = Marker(
+
+    markers[markerId] = Marker(
       icon: icon,
       markerId: markerId,
       draggable: true,
-      onDrag: (LatLng value) async {},
       position: latLng,
       infoWindow: InfoWindow(
-          title: markerIdVal,
-          snippet: 'Lat ${latLng.latitude} - Lng ${latLng.longitude}'),
-      // onTap: () async {},
+        title: markerIdVal,
+        snippet: 'Lat ${latLng.latitude} - Lng ${latLng.longitude}',
+      ),
     );
-    markers[markerId] = marker;
+
     notifyListeners();
   }
 }

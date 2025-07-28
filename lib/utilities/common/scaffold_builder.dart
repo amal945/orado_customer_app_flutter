@@ -31,13 +31,15 @@ class _ScaffoldBuilderState extends State<ScaffoldBuilder> {
           context.goNamed(Home.route);
         }
       },
-      child: Scaffold(
-        appBar: widget.appBar,
-        extendBody: true,
-        extendBodyBehindAppBar: true,
-        backgroundColor: Colors.grey.shade100,
-        body: widget.body,
-        bottomNavigationBar: CustomBottomNavBar(currentRoute: widget.route),
+      child: SafeArea(
+        child: Scaffold(
+          appBar: widget.appBar,
+          extendBody: true,
+          extendBodyBehindAppBar: true,
+          backgroundColor: Colors.white,
+          body: widget.body,
+          bottomNavigationBar: CustomBottomNavBar(currentRoute: widget.route),
+        ),
       ),
     );
   }

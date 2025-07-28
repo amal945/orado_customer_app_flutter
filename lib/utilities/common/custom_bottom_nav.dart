@@ -11,7 +11,9 @@ import 'custom_container.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({super.key, required this.currentRoute});
+
   final String currentRoute;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -37,13 +39,29 @@ class CustomBottomNavBar extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: <Widget>[
-                            getIconButton(context, icon: currentRoute == Home.route ? OradoIcon.home_coloured : OradoIcon.home_outlined, route: Home.route),
+                            getIconButton(context,
+                                icon: currentRoute == Home.route
+                                    ? OradoIcon.home_coloured
+                                    : OradoIcon.home_outlined,
+                                route: Home.route),
                             const SizedBox(width: 20),
-                            getIconButton(context, icon: currentRoute == OrdersScreen.route ? OradoIcon.orders : OradoIcon.orders_outlined, route: OrdersScreen.route),
+                            getIconButton(context,
+                                icon: currentRoute == OrdersScreen.route
+                                    ? OradoIcon.orders
+                                    : OradoIcon.orders_outlined,
+                                route: OrdersScreen.route),
                             const SizedBox(width: 20),
-                            getIconButton(context, icon: currentRoute == FavoritesScreen.route ? Icons.favorite : Icons.favorite_border_outlined, route: FavoritesScreen.route),
+                            getIconButton(context,
+                                icon: currentRoute == FavoritesScreen.route
+                                    ? Icons.favorite
+                                    : Icons.favorite_border_outlined,
+                                route: FavoritesScreen.route),
                             const SizedBox(width: 20),
-                            getIconButton(context, icon: currentRoute == CartScreen.route ? OradoIcon.cart : OradoIcon.cart, route: CartScreen.route),
+                            getIconButton(context,
+                                icon: currentRoute == CartScreen.route
+                                    ? OradoIcon.cart
+                                    : OradoIcon.cart,
+                                route: CartScreen.route),
                           ],
                         ),
                         // Align(
@@ -79,7 +97,8 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
-  IconButton getIconButton(BuildContext context, {required String route, required IconData icon}) {
+  IconButton getIconButton(BuildContext context,
+      {required String route, required IconData icon}) {
     return IconButton(
       onPressed: () {
         if (route != currentRoute) {
@@ -89,7 +108,8 @@ class CustomBottomNavBar extends StatelessWidget {
       icon: Icon(
         icon,
         size: 25,
-        color: currentRoute == route ? AppColors.baseColor : Colors.grey.shade500,
+        color:
+            currentRoute == route ? AppColors.baseColor : Colors.grey.shade500,
       ),
     );
   }

@@ -64,7 +64,7 @@ static Future<FavouriteListResponse> removeFavourite({required String restaurant
   try {
     final token = await LocationProvider.getToken();
     final url = Uri.parse('${Urls.removeFavourite}/$restaurantId');
-    final response = await http.delete(
+    final response = await http.put(
       url,
       headers: {
         ...APIServices.headers,

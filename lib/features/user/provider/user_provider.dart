@@ -5,20 +5,16 @@ import 'package:orado_customer/features/user/model/favourite_model.dart';
 import 'package:orado_customer/features/user/model/past_order_model.dart';
 import 'package:orado_customer/services/favourite_services.dart';
 import 'package:orado_customer/services/order_service.dart';
-
-import '../../../services/profile_services.dart';
+import 'package:orado_customer/utilities/utilities.dart';
 
 class UserProvider extends ChangeNotifier {
   bool _isLoading = false;
-
   bool get isLoading => _isLoading;
 
   List<FavouriteItem> _favourites = [];
-
   List<FavouriteItem> get favourites => _favourites;
 
   List<Orders> _pastOrder = [];
-
   List<Orders> get pastOrder => _pastOrder;
 
   void putLoading(bool value) {
@@ -28,36 +24,53 @@ class UserProvider extends ChangeNotifier {
 
   Future<void> fetchOrders() async {
     putLoading(true);
-    final response = await OrderService.getAllOrders();
-
-    if (response != null && response.data != null) {
-
-      await Future.delayed(Duration(seconds: 2));
-      _pastOrder.clear();
-      _pastOrder.addAll(response.data?.orders ?? []);
+    try {
+      final response = await OrderService.getAllOrders();
+      if (response?.data != null) {
+        _pastOrder = response!.data!.orders ?? [];
+      }
+    } catch (e) {
+      log("Error fetching orders: $e");
+    } finally {
+      putLoading(false);
     }
-    putLoading(false);
   }
 
   Future<void> fetchFavourites() async {
     putLoading(true);
     try {
-      await Future.delayed(Duration(seconds: 2));
       final response = await FavouriteServices.getFavourites();
-      _favourites.clear();
       _favourites = response.data;
     } catch (e) {
       log("Error fetching favourites: $e");
+    } finally {
+      putLoading(false);
     }
-    putLoading(false);
   }
 
-  Future<void> addFavourite(FavouriteItem item) async {
+  Future<void> addFavourite(FavouriteItem item, BuildContext context) async {
+    if (item.id == null || isFavourite(item.id!)) return;
+
     try {
-      if (item.id == null || isFavourite(item.id!)) return;
+      final response =
       await FavouriteServices.addFavourite(restaurantId: item.id!);
-      _favourites.add(item);
-      notifyListeners();
+
+      if (response?.messageType == "success") {
+        _favourites.add(item);
+        notifyListeners();
+
+        showSnackBar(
+          context,
+          message: response?.message ?? "Added to favourites",
+          backgroundColor: Colors.green,
+        );
+      } else {
+        showSnackBar(
+          context,
+          message: response?.message ?? "Failed to add",
+          backgroundColor: Colors.red,
+        );
+      }
     } catch (e) {
       log("Error adding favourite: $e");
     }

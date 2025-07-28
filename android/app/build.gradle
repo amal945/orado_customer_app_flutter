@@ -1,5 +1,5 @@
 plugins {
-    id "com.android.application" version "8.3.0"
+    id "com.android.application" version "8.6.0"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -28,11 +28,11 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            shrinkResources false
         }
     }
+
 
 }
 

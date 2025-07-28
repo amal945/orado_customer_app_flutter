@@ -7,7 +7,7 @@ import 'package:orado_customer/features/user/provider/user_provider.dart';
 import 'package:provider/provider.dart';
 import '../utilities.dart';
 
-class FoodTileCardLarge extends StatelessWidget {
+class FoodTileCardLarge extends StatefulWidget {
   const FoodTileCardLarge({
     super.key,
     this.image,
@@ -24,20 +24,25 @@ class FoodTileCardLarge extends StatelessWidget {
   final String? productName;
 
   @override
+  State<FoodTileCardLarge> createState() => _FoodTileCardLargeState();
+}
+
+class _FoodTileCardLargeState extends State<FoodTileCardLarge> {
+  @override
   Widget build(BuildContext context) {
     return Consumer<UserProvider>(
       builder: (context, userProvider, _) {
-        final isFavourite =
-            merchantId != null && userProvider.isFavourite(merchantId!);
+        final isFavourite = widget.merchantId != null &&
+            userProvider.isFavourite(widget.merchantId!);
 
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: GestureDetector(
             onTap: () {
-              if (merchantId != null) {
+              if (widget.merchantId != null) {
                 context.pushNamed(
                   MerchantDetailScreen.route,
-                  queryParameters: <String, String>{'id': merchantId!},
+                  queryParameters: <String, String>{'id': widget.merchantId!},
                 );
               }
             },
@@ -58,7 +63,8 @@ class FoodTileCardLarge extends StatelessWidget {
                           ),
                           color: Colors.black.withAlpha(30),
                           image: DecorationImage(
-                            image: CachedNetworkImageProvider(image ?? ''),
+                            image:
+                                CachedNetworkImageProvider(widget.image ?? ''),
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -69,33 +75,37 @@ class FoodTileCardLarge extends StatelessWidget {
                             children: <Widget>[
                               IconButton(
                                 onPressed: () {
-                                  if (merchantId == null) return;
+                                  if (widget.merchantId == null) return;
                                   if (isFavourite) {
-                                    userProvider.removeFavourite(merchantId!);
+                                    userProvider
+                                        .removeFavourite(widget.merchantId!);
                                   } else {
                                     userProvider.addFavourite(
-                                      FavouriteItem(
-                                        id: merchantId!,
-                                        name: productName ?? name ?? '',
-                                        images: [image ?? ''],
-                                      ),
-                                    );
+                                        FavouriteItem(
+                                          id: widget.merchantId!,
+                                          name: widget.productName ??
+                                              widget.name ??
+                                              '',
+                                          images: [widget.image ?? ''],
+                                        ),
+                                        context);
                                   }
                                 },
                                 icon: Icon(
                                   isFavourite
                                       ? Icons.favorite
                                       : Icons.favorite_outline_outlined,
-                                  color: isFavourite ? Colors.red : Colors.white70,
+                                  color:
+                                      isFavourite ? Colors.red : Colors.white70,
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () {},
-                                icon: const Icon(
-                                  Icons.more_vert,
-                                  color: Colors.white70,
-                                ),
-                              ),
+                              // IconButton(
+                              //   onPressed: () {},
+                              //   icon: const Icon(
+                              //     Icons.more_vert,
+                              //     color: Colors.white70,
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),
@@ -110,10 +120,10 @@ class FoodTileCardLarge extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
                                 Text(
-                                  name ?? '',
+                                  widget.name ?? '',
                                   textAlign: TextAlign.center,
-                                  style:
-                                      AppStyles.getSemiBoldTextStyle(fontSize: 17),
+                                  style: AppStyles.getSemiBoldTextStyle(
+                                      fontSize: 17),
                                 ),
                               ],
                             ),
@@ -123,9 +133,10 @@ class FoodTileCardLarge extends StatelessWidget {
                                 const Icon(Icons.timer_sharp, size: 15),
                                 const SizedBox(width: 10),
                                 Text(
-                                  '22 mins . ${distance ?? 0} KM',
+                                  '22 mins . ${widget.distance ?? 0} KM',
                                   textAlign: TextAlign.center,
-                                  style: AppStyles.getMediumTextStyle(fontSize: 15),
+                                  style: AppStyles.getMediumTextStyle(
+                                      fontSize: 15),
                                 ),
                               ],
                             ),

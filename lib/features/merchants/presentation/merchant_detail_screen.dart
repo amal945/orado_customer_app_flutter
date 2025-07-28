@@ -14,6 +14,8 @@ import 'package:provider/provider.dart';
 import '../../../utilities/common/custom_container.dart';
 import '../../../utilities/common/food_listing_card.dart';
 import '../../../utilities/utilities.dart';
+import '../../user/model/favourite_model.dart';
+import '../../user/provider/user_provider.dart';
 
 class MerchantDetailScreen extends StatefulWidget {
   const MerchantDetailScreen({super.key, this.id, this.query});
@@ -71,13 +73,10 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     elevation: 0,
                     backgroundColor: AppColors.baseColor,
                     leading: IconButton(
-                        icon: const Icon(
-                          Icons.arrow_back_ios_new_outlined,
-                          color: Colors.white,
-                        ),
-                        onPressed: () {
-                          context.pop();
-                        }),
+                      icon: const Icon(Icons.arrow_back_ios_new_outlined,
+                          color: Colors.white),
+                      onPressed: () => context.pop(),
+                    ),
                     title: TextField(
                       controller: provider.searchController,
                       style: const TextStyle(color: Colors.white),
@@ -90,10 +89,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     ),
                     actions: [
                       IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                        ),
+                        icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () {
                           provider.searchController.clear();
                           provider.filterMenuItems('');
@@ -117,12 +113,36 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     centerTitle: true,
                     actions: <Widget>[
                       InkWell(
-                          onTap: () {
-                            provider.isSearching = true;
-                          },
-                          child: const Icon(Icons.search)),
+                        onTap: () {
+                          provider.isSearching = true;
+                        },
+                        child: const Icon(Icons.search),
+                      ),
                       const SizedBox(width: 10),
-                      InkWell(onTap: () {}, child: const Icon(Icons.favorite)),
+                      Consumer<UserProvider>(
+                        builder: (context, userProvider, _) {
+                          final isFav = userProvider.isFavourite(widget.id!);
+                          return IconButton(
+                            icon: Icon(
+                              isFav ? Icons.favorite : Icons.favorite_border,
+                              color: Colors.white,
+                            ),
+                            onPressed: () async {
+                              final favItem = FavouriteItem(
+                                  id: widget.id!,
+                                  name: provider
+                                          .merchantDetails.first.data?.name ??
+                                      "");
+                              if (isFav) {
+                                await userProvider.removeFavourite(widget.id!);
+                              } else {
+                                await userProvider.addFavourite(
+                                    favItem, context);
+                              }
+                            },
+                          );
+                        },
+                      ),
                       const SizedBox(width: 10),
                     ],
                   );
@@ -393,8 +413,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
             (sum, item) => sum + (item.quantity ?? 0),
           );
 
-          final bool isSameRestaurant =
-              cartProvider.cartData?.restaurantId == widget.id;
+          final bool isSameRestaurant = cartProvider.restaurantId == widget.id;
 
           // Hide the bar if no items OR restaurant doesn't match
           if (totalItems == 0 || !isSameRestaurant) {

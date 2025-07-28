@@ -70,9 +70,9 @@ class _RazorpayPaymentScreenState extends State<RazorpayPaymentScreen> {
     final int amountInPaise = (widget.amount * 100).round();
 
     var options = {
-      'key': widget.keyId, // ✅ Use dynamic keyId
+      'key': widget.keyId,
       'amount': amountInPaise,
-      'order_id': widget.orderId, // ✅ Include order_id
+      'order_id': widget.orderId,
       'name': 'Acme Corp.',
       'description': 'Test Payment',
       'prefill': {

@@ -46,83 +46,71 @@ class _SearchFieldState extends State<SearchField> {
   Future<void> _startListening() async {
     log('start listening . . .');
     try {
+      // Ask for microphone permission here
+      final status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        log('Microphone permission denied');
+        return;
+      }
+
+      // Initialize speech if not already done
+      if (!_speechEnabled) {
+        _speechEnabled = await _speechToText.initialize();
+      }
+
       if (searchTextController.text.isNotEmpty) {
         searchTextController.clear();
       }
-      try {
-        setState(() {});
 
-        await _speechToText.listen(
-            onResult: _onSpeechResult,
-            listenFor: const Duration(seconds: 30),
-            localeId: 'en_En',
-            partialResults: false);
-        await showDialog(
-            context: context,
-            builder: (BuildContext c) {
-              return AlertDialog(
-                surfaceTintColor: Colors.white,
-                backgroundColor: Colors.white,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-                content: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      speechText,
-                      style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      '''Say "Pizza"''',
-                      style: AppStyles.getSemiBoldTextStyle(
-                          fontSize: 13, color: Colors.grey.shade500),
-                    ),
-                    const SizedBox(height: 13),
-                    CircleAvatar(
-                      radius: 25,
-                      backgroundColor: AppColors.baseColor,
-                      child: const Icon(
-                        Icons.mic,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+      setState(() {});
+
+      await _speechToText.listen(
+        onResult: _onSpeechResult,
+        listenFor: const Duration(seconds: 30),
+        localeId: 'en_En',
+        partialResults: false,
+      );
+
+      await showDialog(
+        context: context,
+        builder: (BuildContext c) {
+          return AlertDialog(
+            surfaceTintColor: Colors.white,
+            backgroundColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+            content: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  speechText,
+                  style: AppStyles.getSemiBoldTextStyle(fontSize: 17),
                 ),
-              );
-            });
-      } finally {
-        _stopListening();
-      }
+                const SizedBox(height: 10),
+                Text(
+                  '''Say "Pizza"''',
+                  style: AppStyles.getSemiBoldTextStyle(
+                      fontSize: 13, color: Colors.grey.shade500),
+                ),
+                const SizedBox(height: 13),
+                CircleAvatar(
+                  radius: 25,
+                  backgroundColor: AppColors.baseColor,
+                  child: const Icon(Icons.mic, color: Colors.white),
+                ),
+              ],
+            ),
+          );
+        },
+      );
     } catch (e) {
-      log('fce$e');
+      log('Speech error: $e');
+    } finally {
+      _stopListening();
     }
   }
 
-  Future<void> listenForPermissions() async {
-    final PermissionStatus status = await Permission.microphone.status;
-    switch (status) {
-      case PermissionStatus.denied:
-        requestForPermission();
-        break;
-      case PermissionStatus.granted:
-        break;
-      case PermissionStatus.limited:
-        break;
-      case PermissionStatus.permanentlyDenied:
-        break;
-      case PermissionStatus.restricted:
-        break;
 
-      case PermissionStatus.provisional:
-        break;
-    }
-  }
-
-  Future<void> requestForPermission() async {
-    await Permission.microphone.request();
-  }
 
   /// Manually stop the active speech recognition session
   /// Note that there are also timeouts that each platform enforces
@@ -159,10 +147,6 @@ class _SearchFieldState extends State<SearchField> {
   @override
   void initState() {
     super.initState();
-    listenForPermissions();
-    if (!_speechEnabled) {
-      _initSpeech();
-    }
     searchTextController.text = widget.searchQuery ?? '';
   }
 

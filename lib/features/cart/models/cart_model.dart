@@ -33,12 +33,12 @@ class Data {
 
   Data(
       {this.cartId,
-        this.userId,
-        this.restaurantId,
-        this.products,
-        this.totalPrice,
-        this.createdAt,
-        this.updatedAt});
+      this.userId,
+      this.restaurantId,
+      this.products,
+      this.totalPrice,
+      this.createdAt,
+      this.updatedAt});
 
   Data.fromJson(Map<String, dynamic> json) {
     cartId = json['cartId'];
@@ -74,22 +74,23 @@ class Products {
   String? productId;
   String? name;
   String? description;
+  String? restaurantId;
   List<String>? images;
   String? foodType;
   int? price;
   int? quantity;
   int? total;
 
-  Products({
-    this.productId,
-    this.name,
-    this.description,
-    this.images,
-    this.foodType,
-    this.price,
-    this.quantity,
-    this.total,
-  });
+  Products(
+      {this.productId,
+      this.name,
+      this.description,
+      this.images,
+      this.foodType,
+      this.price,
+      this.quantity,
+      this.total,
+      this.restaurantId});
 
   Products.fromJson(Map<String, dynamic> json) {
     productId = json['productId'];
@@ -100,6 +101,7 @@ class Products {
     price = json['price'];
     quantity = json['quantity'];
     total = json['total'];
+    restaurantId = json["restaurantId"];
   }
 
   Map<String, dynamic> toJson() {
@@ -112,6 +114,7 @@ class Products {
     data['price'] = this.price;
     data['quantity'] = this.quantity;
     data['total'] = this.total;
+    data["restaurantId"] = this.restaurantId;
     return data;
   }
 
@@ -137,4 +140,3 @@ class Products {
     );
   }
 }
-

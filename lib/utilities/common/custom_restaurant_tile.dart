@@ -81,7 +81,7 @@ class CustomRestaurantTile extends StatelessWidget {
                                             id: merchantId!,
                                             name: name ?? '',
                                             images: image != null ? [image!] : <String>[],
-                                          ));
+                                          ),context);
                                         }
                                       }
                                     },

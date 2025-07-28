@@ -2,11 +2,13 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:orado_customer/features/auth/presentation/get_started_screen.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/home/provider/home_provider.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
+import 'package:orado_customer/features/user/provider/user_provider.dart';
 import 'package:orado_customer/utilities/common/scaffold_builder.dart';
 import 'package:provider/provider.dart';
 import '../../../utilities/common/categories_section.dart';
@@ -31,24 +33,20 @@ class _HomeState extends State<Home> {
   String _searchQuery = '';
 
   @override
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(Duration(seconds: 1));
-      await context.read<HomeProvider>().getHome(context);
-      // showOrderStatusBottomSheet(context);
-      // simulateSocketStatusUpdates(); // mock live updates
-    });
-  }
-
-  void simulateSocketStatusUpdates() async {
-    for (int i = 0; i < orderStatuses.length; i++) {
-      await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
-        _statusIndex = i;
-        _bottomSheetSetState?.call(() {}); // trigger UI update
+        final homeProvider = context.read<HomeProvider>();
+        final userProvider = context.read<UserProvider>();
+
+        await homeProvider.getHome(context);
+        await userProvider.fetchFavourites();
+
+        homeProvider.initSocket();
       }
-    }
+    });
   }
 
   late HomeProvider homeProvider;
@@ -64,20 +62,6 @@ class _HomeState extends State<Home> {
     super.dispose();
   }
 
-  final List<String> orderStatuses = [
-    "Order Placed",
-    "Order Confirmed",
-    "Order Prepared",
-    "Waiting for Pickup",
-    "Delivery Partner Assigned",
-    "Order Picked Up",
-    "On the Way",
-    "On Time",
-    "Delayed",
-    "Nearby",
-    "Reaching Your Doorstep"
-  ];
-
   int _statusIndex = 0;
   void Function(VoidCallback)? _bottomSheetSetState;
 
@@ -92,27 +76,30 @@ class _HomeState extends State<Home> {
           minChildSize: 0.2,
           maxChildSize: 0.4,
           builder: (_, controller) {
-            return StatefulBuilder(
-              builder: (context, setState) {
-                _bottomSheetSetState = setState;
-                final currentStatus = orderStatuses[_statusIndex];
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.all(24),
+              child: Consumer<HomeProvider>(
+                builder: (context, provider, _) {
+                  final status = provider.liveDeliveryStatus['status'] ??
+                      'Waiting for update';
+                  final eta = provider.liveDeliveryStatus['eta'];
+                  final isConnected = provider.isSocketConnected;
 
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 50,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade400,
-                          borderRadius: BorderRadius.circular(10),
+                      Center(
+                        child: Container(
+                          width: 50,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -126,27 +113,53 @@ class _HomeState extends State<Home> {
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.local_shipping,
                             color: Colors.blue,
                             size: 32,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: Text(
-                              currentStatus,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  status,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (eta != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'ETA: $eta',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                                if (!isConnected)
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      'Connecting to live updates...',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.redAccent,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ],
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             );
           },
         );
@@ -164,9 +177,60 @@ class _HomeState extends State<Home> {
         if (provider.isLoading == true) {
           return BuildLoadingWidget(
               withCenter: true, color: AppColors.baseColor);
+        } else if (provider.restaurantList.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: () async => provider.refresh(context),
+            child: CustomScrollView(
+              physics: AlwaysScrollableScrollPhysics(),
+              slivers: <Widget>[
+                CustomSliverAppBar().showSliverAppBar(
+                  context,
+                  address: context.watch<LocationProvider>().isloading
+                      ? 'Fetching...'
+                      : context
+                          .watch<LocationProvider>()
+                          .currentLocationAddress,
+                ),
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 250,
+                          height: 200,
+                          child: Lottie.asset(
+                              'assets/animations/Dlivery Map.json'),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Sorry! Restaurants aren't accepting orders at the moment.",
+                          style: AppStyles.getRegularTextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Please check later!.",
+                          style: AppStyles.getBoldTextStyle(
+                            fontSize: 16,
+                            color: Colors.red,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
         } else {
           return RefreshIndicator.adaptive(
-            onRefresh: () async => provider.getHome(context),
+            onRefresh: () async => provider.refresh(context),
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: <Widget>[
