@@ -9,12 +9,15 @@ import 'package:orado_customer/utilities/utilities.dart';
 
 class UserProvider extends ChangeNotifier {
   bool _isLoading = false;
+
   bool get isLoading => _isLoading;
 
   List<FavouriteItem> _favourites = [];
+
   List<FavouriteItem> get favourites => _favourites;
 
   List<Orders> _pastOrder = [];
+
   List<Orders> get pastOrder => _pastOrder;
 
   void putLoading(bool value) {
@@ -53,7 +56,7 @@ class UserProvider extends ChangeNotifier {
 
     try {
       final response =
-      await FavouriteServices.addFavourite(restaurantId: item.id!);
+          await FavouriteServices.addFavourite(restaurantId: item.id!);
 
       if (response?.messageType == "success") {
         _favourites.add(item);
@@ -76,10 +79,18 @@ class UserProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> removeFavourite(String restaurantId) async {
+  Future<void> removeFavourite(
+      String restaurantId, BuildContext context) async {
     try {
-      await FavouriteServices.removeFavourite(restaurantId: restaurantId);
-      _favourites.removeWhere((fav) => fav.id == restaurantId);
+      final response =
+          await FavouriteServices.removeFavourite(restaurantId: restaurantId);
+
+      if (response != null && response.messageType == "success") {
+        _favourites.removeWhere((fav) => fav.id == restaurantId);
+        showSnackBar(context,
+            message: response?.message ?? "Removed from favourites",
+            backgroundColor: Colors.red);
+      }
       notifyListeners();
     } catch (e) {
       log("Error removing favourite: $e");

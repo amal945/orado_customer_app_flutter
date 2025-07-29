@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:orado_customer/features/auth/model/global_response_model.dart';
+import 'package:orado_customer/features/auth/model/global_response_model.dart';
+import 'package:orado_customer/features/auth/model/global_response_model.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/user/model/favourite_model.dart';
 import 'package:orado_customer/services/api_services.dart';
@@ -31,7 +34,7 @@ class FavouriteServices {
     }
   }
 
-  static Future<FavouriteListResponse> addFavourite(
+  static Future<GlobalResponseModel> addFavourite(
       {required String restaurantId}) async {
     try {
       final token = await LocationProvider.getToken();
@@ -48,11 +51,11 @@ class FavouriteServices {
       final json = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return FavouriteListResponse.fromJson(json);
+        return GlobalResponseModel.fromJson(json);
       } else {
         print('Failed to add favourite. Status: ${response.statusCode}');
         print('Response body: ${response.body}');
-        return FavouriteListResponse.fromJson(json);
+        return GlobalResponseModel.fromJson(json);
       }
     } catch (e) {
       print("Exception in addFavourite: $e");
@@ -60,30 +63,31 @@ class FavouriteServices {
     }
   }
 
-static Future<FavouriteListResponse> removeFavourite({required String restaurantId}) async {
-  try {
-    final token = await LocationProvider.getToken();
-    final url = Uri.parse('${Urls.removeFavourite}/$restaurantId');
-    final response = await http.put(
-      url,
-      headers: {
-        ...APIServices.headers,
-        'Authorization': 'Bearer $token',
-      },
-    );
+  static Future<FavouriteListResponse?> removeFavourite({required String restaurantId}) async {
+    try {
+      final token = await LocationProvider.getToken();
+      final url = Uri.parse('${Urls.removeFavourite}');
+      final response = await http.put(
+        url,
+        body: jsonEncode({"restaurantId": restaurantId}),
+        headers: {
+          ...APIServices.headers,
+          'Authorization': 'Bearer $token',
+        },
+      );
 
-    final json = jsonDecode(response.body);
+      final json = jsonDecode(response.body);
 
-    if (response.statusCode == 200 || response.statusCode == 204) {
-      return FavouriteListResponse.fromJson(json);
-    } else {
-      print('Failed to remove favourite. Status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      return FavouriteListResponse.fromJson(json);
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return FavouriteListResponse.fromJson(json);
+      } else {
+        print('Failed to remove favourite. Status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print("Exception in removeFavourite: $e");
+      rethrow;
     }
-  } catch (e) {
-    print("Exception in removeFavourite: $e");
-    rethrow;
   }
-}
 }

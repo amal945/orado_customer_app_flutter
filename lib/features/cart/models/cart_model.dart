@@ -96,7 +96,10 @@ class Products {
     productId = json['productId'];
     name = json['name'];
     description = json['description'];
-    images = json['images'].cast<String>();
+    images = json['images'] != null
+        ? List<String>.from(json['images'])
+        : [];
+
     foodType = json['foodType'];
     price = json['price'];
     quantity = json['quantity'];

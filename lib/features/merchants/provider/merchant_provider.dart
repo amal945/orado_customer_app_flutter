@@ -32,6 +32,28 @@ class MerchantProvider extends ChangeNotifier {
 
   bool get isSearching => _isSearching;
 
+  List<MenuItem> _originalMenuItems = [];
+  String? activeFilter;
+
+  void storeOriginalItems() {
+    _originalMenuItems = List.from(menuItems);
+  }
+
+  void toggleFoodTypeFilter(String foodType) {
+    if (activeFilter == foodType) {
+      // If clicking the already active filter, show all
+      activeFilter = null;
+      menuItems = List.from(_originalMenuItems);
+    } else {
+      // Apply new filter
+      activeFilter = foodType;
+      menuItems = _originalMenuItems.where((item) =>
+      item.foodType?.toLowerCase() == foodType.toLowerCase()
+      ).toList();
+    }
+    notifyListeners();
+  }
+
   set isSearching(bool val) {
     _isSearching = val;
     notifyListeners();
@@ -74,9 +96,9 @@ class MerchantProvider extends ChangeNotifier {
 
       if (response.messageType == "success") {
         menuItems.clear();
-        final data =
-            response.data.menu.expand((category) => category.items).toList();
+        final data = response.data.menu.expand((category) => category.items).toList();
         menuItems.addAll(data);
+        storeOriginalItems(); // Store the original items
       }
     } catch (e) {
       log("$e");

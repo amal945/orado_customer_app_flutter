@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 
 import '../../../utilities/common/custom_container.dart';
 import '../../../utilities/common/food_listing_card.dart';
+import '../../../utilities/common/loading_widget.dart';
 import '../../../utilities/utilities.dart';
 import '../../user/model/favourite_model.dart';
 import '../../user/provider/user_provider.dart';
@@ -32,7 +33,7 @@ ValueNotifier<bool> scrollNotifier = ValueNotifier<bool>(true);
 
 class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   ScrollController scrollController = ScrollController();
-  List<String> filteringOptions = <String>['Veg', 'Non-Veg'];
+  List<String> filteringOptions = <String>['veg', 'Non-Veg'];
 
   @override
   void initState() {
@@ -121,26 +122,40 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                       const SizedBox(width: 10),
                       Consumer<UserProvider>(
                         builder: (context, userProvider, _) {
-                          final isFav = userProvider.isFavourite(widget.id!);
-                          return IconButton(
-                            icon: Icon(
-                              isFav ? Icons.favorite : Icons.favorite_border,
-                              color: Colors.white,
-                            ),
-                            onPressed: () async {
-                              final favItem = FavouriteItem(
-                                  id: widget.id!,
-                                  name: provider
-                                          .merchantDetails.first.data?.name ??
-                                      "");
-                              if (isFav) {
-                                await userProvider.removeFavourite(widget.id!);
-                              } else {
-                                await userProvider.addFavourite(
-                                    favItem, context);
-                              }
-                            },
-                          );
+                          return userProvider.favourites
+                                  .any((fav) => fav.id == widget.id)
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.favorite,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    final favItem = FavouriteItem(
+                                        id: widget.id!,
+                                        name: provider.merchantDetails.first
+                                                .data?.name ??
+                                            "");
+
+                                    await userProvider.removeFavourite(
+                                        widget.id!, context);
+                                  },
+                                )
+                              : IconButton(
+                                  icon: Icon(
+                                    Icons.favorite_outline,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    final favItem = FavouriteItem(
+                                        id: widget.id!,
+                                        name: provider.merchantDetails.first
+                                                .data?.name ??
+                                            "");
+
+                                    await userProvider.addFavourite(
+                                        favItem, context);
+                                  },
+                                );
                         },
                       ),
                       const SizedBox(width: 10),
@@ -160,8 +175,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
               );
             }
 
-            if (provider.menuItems.isEmpty ||
-                provider.merchantDetails.isEmpty) {
+            if (provider.merchantDetails.isEmpty &&
+                provider.menuItems.isEmpty) {
               return const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               );
@@ -285,67 +300,95 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                                 .width,
                                             decoration: const BoxDecoration(),
                                             child: ListView.builder(
-                                                itemCount:
-                                                    filteringOptions.length,
-                                                shrinkWrap: true,
-                                                scrollDirection:
-                                                    Axis.horizontal,
-                                                itemBuilder:
-                                                    (BuildContext c, int i) {
-                                                  return InkWell(
-                                                    onTap: () {},
-                                                    radius: 50,
-                                                    child: Center(
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                                horizontal: 7.0,
-                                                                vertical: 3),
-                                                        child: Material(
-                                                          elevation: 5,
-                                                          color: Colors.white,
-                                                          surfaceTintColor:
-                                                              Colors.white,
-                                                          shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          10)),
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .symmetric(
-                                                                    horizontal:
-                                                                        12.0,
-                                                                    vertical:
-                                                                        7),
-                                                            child: Row(
-                                                              children: <Widget>[
-                                                                if (i == 0)
-                                                                  const Icon(
-                                                                      Icons
-                                                                          .settings,
-                                                                      size: 14),
-                                                                const SizedBox(
-                                                                    width: 10),
-                                                                Text(
-                                                                  filteringOptions[
-                                                                      i],
-                                                                  style: AppStyles
-                                                                      .getBoldTextStyle(
-                                                                    fontSize:
-                                                                        15,
-                                                                  ),
+                                              itemCount:
+                                                  filteringOptions.length,
+                                              shrinkWrap: true,
+                                              scrollDirection: Axis.horizontal,
+                                              itemBuilder:
+                                                  (BuildContext c, int i) {
+                                                final option =
+                                                    filteringOptions[i];
+                                                final isActive =
+                                                    provider.activeFilter ==
+                                                        option;
+
+                                                return InkWell(
+                                                  onTap: () => provider
+                                                      .toggleFoodTypeFilter(
+                                                          option),
+                                                  child: Center(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 7.0,
+                                                          vertical: 3),
+                                                      child: Material(
+                                                        elevation: 5,
+                                                        color: isActive
+                                                            ? Colors
+                                                                .green.shade100
+                                                            : Colors.white,
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                          side: BorderSide(
+                                                            color: isActive
+                                                                ? Colors.green
+                                                                : Colors.grey,
+                                                            width: 1,
+                                                          ),
+                                                        ),
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  horizontal:
+                                                                      12.0,
+                                                                  vertical: 7),
+                                                          child: Row(
+                                                            children: <Widget>[
+                                                              Icon(
+                                                                option == 'Veg'
+                                                                    ? Icons.eco
+                                                                    : Icons
+                                                                        .set_meal,
+                                                                size: 14,
+                                                                color: option ==
+                                                                        'Veg'
+                                                                    ? Colors
+                                                                        .green
+                                                                    : Colors
+                                                                        .red,
+                                                              ),
+                                                              const SizedBox(
+                                                                  width: 10),
+                                                              Text(
+                                                                option,
+                                                                style: AppStyles
+                                                                    .getBoldTextStyle(
+                                                                  fontSize: 15,
+                                                                  color: isActive
+                                                                      ? (option ==
+                                                                              'Veg'
+                                                                          ? Colors
+                                                                              .green
+                                                                          : Colors
+                                                                              .red)
+                                                                      : Colors
+                                                                          .black,
                                                                 ),
-                                                              ],
-                                                            ),
+                                                              ),
+                                                            ],
                                                           ),
                                                         ),
                                                       ),
                                                     ),
-                                                  );
-                                                }),
+                                                  ),
+                                                );
+                                              },
+                                            ),
                                           ),
                                           const SizedBox(height: 20),
                                           Padding(
@@ -360,30 +403,39 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                             ),
                                           ),
                                           const SizedBox(height: 20),
-                                          FoodsListingCard(
+                                          // Replace the FoodsListingCard section with this:
+                                          if (provider.menuItems.isEmpty)
+                                            // Show empty state when no items match the filter
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 40.0),
+                                              child: Center(
+                                                child: Column(
+                                                  children: [
+                                                    Icon(
+                                                        Icons.fastfood_outlined,
+                                                        size: 50,
+                                                        color: Colors.grey),
+                                                    SizedBox(height: 10),
+                                                    Text(
+                                                      'No items found',
+                                                      style: AppStyles
+                                                          .getMediumTextStyle(
+                                                              fontSize: 16,
+                                                              color:
+                                                                  Colors.grey),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            )
+                                          else
+                                            FoodsListingCard(
                                               items: provider.menuItems,
-                                              restaurantId: widget.id!),
+                                              restaurantId: widget.id!,
+                                            ),
+
                                           const SizedBox(height: 30),
-                                          // Align(
-                                          //   alignment: Alignment.centerLeft,
-                                          //   child: Text(
-                                          //     'Try  these similar restaurants',
-                                          //     style: AppStyles.getSemiBoldTextStyle(fontSize: 22),
-                                          //   ),
-                                          // ),
-                                          // const SizedBox(height: 20),
-                                          // SizedBox(
-                                          //   height: 300,
-                                          //   child: ListView.builder(
-                                          //     shrinkWrap: true,
-                                          //     itemCount: 10,
-                                          //     physics: const AlwaysScrollableScrollPhysics(),
-                                          //     scrollDirection: Axis.horizontal,
-                                          //     itemBuilder: (BuildContext context, int index) {
-                                          //       return const FoodTileCardSmall();
-                                          //     },
-                                          //   ),
-                                          // ),
                                         ],
                                       ),
                                     ),
@@ -422,7 +474,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
 
           return GestureDetector(
             onTap: () {
-              context.pushNamed('cart');
+              context.pushNamed(CartScreen.route);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 600),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/auth/presentation/get_started_screen.dart';
 import 'package:orado_customer/features/profile/presentation/edit_profile_screen.dart';
+import 'package:orado_customer/features/profile/presentation/loyalty_info_screen.dart';
 import 'package:orado_customer/features/profile/provider/profile_provider.dart';
 import 'package:orado_customer/utilities/common/custom_coloured_button.dart';
 import 'package:orado_customer/utilities/utilities.dart';
@@ -147,6 +148,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: Icon(Icons.support_agent_outlined,
                       color: AppColors.baseColor),
                   title: Text('Support',
+                      style: AppStyles.getBoldTextStyle(fontSize: 20)),
+                  trailing: Icon(Icons.arrow_forward_ios,
+                      color: AppColors.baseColor, size: 16),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  minVerticalPadding: 20,
+                  onTap: () {
+                    context.pushNamed(LoyaltyInfoScreen.route);
+                  },
+                  leading: Icon(Icons.verified_outlined,
+                      color: AppColors.baseColor),
+                  title: Text('Loyalty Points',
                       style: AppStyles.getBoldTextStyle(fontSize: 20)),
                   trailing: Icon(Icons.arrow_forward_ios,
                       color: AppColors.baseColor, size: 16),

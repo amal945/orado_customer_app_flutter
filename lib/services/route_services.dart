@@ -11,6 +11,9 @@ import 'package:orado_customer/features/location/presentation/map_screen.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_listing_screen.dart';
 import 'package:orado_customer/features/profile/presentation/edit_profile_screen.dart';
+import 'package:orado_customer/features/profile/presentation/loyalty_info_screen.dart';
+import 'package:orado_customer/features/profile/presentation/loyalty_info_screen.dart';
+import 'package:orado_customer/features/profile/presentation/loyalty_info_screen.dart';
 import 'package:orado_customer/features/profile/presentation/profile_screen.dart';
 import 'package:orado_customer/features/splash/presentation/splash_screen.dart';
 import 'package:orado_customer/features/user/presentation/favorites_screen.dart';
@@ -114,6 +117,12 @@ final router = GoRouter(
           name: Home.route,
           pageBuilder: (context, state) =>
               getCustomTransition(state, const Home()),
+        ),
+        GoRoute(
+          path: LoyaltyInfoScreen.route,
+          name: LoyaltyInfoScreen.route,
+          pageBuilder: (context, state) =>
+              getCustomTransition(state, const LoyaltyInfoScreen()),
         ),
         GoRoute(
           path: MapScreen.route,

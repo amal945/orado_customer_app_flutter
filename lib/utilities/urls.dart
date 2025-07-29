@@ -1,6 +1,17 @@
 class Urls {
 
-  static const baserUrl = "https://forforntend-flutter.vercel.app/";
+  // https://forforntend-flutter.vercel.app/user/fav/restaurants/remove
+
+  // https://orado-backend.onrender.com/api/flutter/
+
+  static const baserUrl = "https://orado-backend.onrender.com/api/flutter/";
+
+
+  // static const baserUrl = "https://forforntend-flutter.vercel.app/";
+
+  static const getLoyalty = "https://orado-backend.onrender.com/loyality";
+
+  static const getLoyaltyPointsBalance = "https://orado-backend.onrender.com/user/loyalty/balance";
 
   static const login = "${baserUrl}user/login";
 
@@ -22,7 +33,9 @@ class Urls {
 
   static const addfavourite = "${baserUrl}user/fav/restaurants"; 
 
-  static const removeFavourite = "${baserUrl}user/fav/restaurants//remove";
+  static const removeFavourite = "${baserUrl}user/fav/restaurants/remove";
 
   static const getFavourite = "${baserUrl}user/fav/restaurants";
+
+
 }

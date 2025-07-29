@@ -78,7 +78,7 @@ class _FoodTileCardLargeState extends State<FoodTileCardLarge> {
                                   if (widget.merchantId == null) return;
                                   if (isFavourite) {
                                     userProvider
-                                        .removeFavourite(widget.merchantId!);
+                                        .removeFavourite(widget.merchantId!,context);
                                   } else {
                                     userProvider.addFavourite(
                                         FavouriteItem(

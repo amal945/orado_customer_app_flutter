@@ -33,7 +33,6 @@ class _HomeState extends State<Home> {
   String _searchQuery = '';
 
   @override
-  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -45,6 +44,13 @@ class _HomeState extends State<Home> {
         await userProvider.fetchFavourites();
 
         homeProvider.initSocket();
+
+        // Listen for changes in liveDeliveryStatus and show bottom sheet when data arrives
+        homeProvider.addListener(() {
+          if (homeProvider.liveDeliveryStatus.isNotEmpty && mounted) {
+            showOrderStatusBottomSheet(context);
+          }
+        });
       }
     });
   }
@@ -66,105 +72,109 @@ class _HomeState extends State<Home> {
   void Function(VoidCallback)? _bottomSheetSetState;
 
   void showOrderStatusBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.3,
-          minChildSize: 0.2,
-          maxChildSize: 0.4,
-          builder: (_, controller) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: const EdgeInsets.all(24),
-              child: Consumer<HomeProvider>(
-                builder: (context, provider, _) {
-                  final status = provider.liveDeliveryStatus['status'] ??
-                      'Waiting for update';
-                  final eta = provider.liveDeliveryStatus['eta'];
-                  final isConnected = provider.isSocketConnected;
+    final homeProvider = Provider.of<HomeProvider>(context, listen: false);
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 50,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Live Order Status',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.local_shipping,
-                            color: Colors.blue,
-                            size: 32,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  status,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                if (eta != null) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'ETA: $eta',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                                if (!isConnected)
-                                  const Padding(
-                                    padding: EdgeInsets.only(top: 8.0),
-                                    child: Text(
-                                      'Connecting to live updates...',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.redAccent,
-                                      ),
-                                    ),
-                                  ),
-                              ],
+    // Only show if there's live delivery status data
+    if (homeProvider.liveDeliveryStatus.isNotEmpty) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return DraggableScrollableSheet(
+            initialChildSize: 0.3,
+            minChildSize: 0.2,
+            maxChildSize: 0.4,
+            builder: (_, controller) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Consumer<HomeProvider>(
+                  builder: (context, provider, _) {
+                    final status = provider.liveDeliveryStatus['orderStatus'] ??
+                        'Waiting for update';
+                    final isConnected = provider.isSocketConnected;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 50,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade400,
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              ),
-            );
-          },
-        );
-      },
-    );
+                        ),
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Live Order Status',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.local_shipping,
+                              color: Colors.blue,
+                              size: 32,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    status,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (status != 'Waiting for update') ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'ETA: $status',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                  if (!isConnected)
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 8.0),
+                                      child: Text(
+                                        'Connecting to live updates...',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
   }
 
   String address = 'Fetching...';
@@ -483,7 +493,14 @@ class _HomeState extends State<Home> {
                                           provider.recommendedRestaurants[i];
                                       return GestureDetector(
                                         onTap: () {
-                                          // context.pushNamed(AppPaths.singleRestaurentScreen);
+                                          if (data.merchantId != null) {
+                                            context.pushNamed(
+                                              MerchantDetailScreen.route,
+                                              queryParameters: <String, String>{
+                                                'id': data.merchantId!
+                                              },
+                                            );
+                                          }
                                         },
                                         child: Padding(
                                           padding: EdgeInsets.symmetric(

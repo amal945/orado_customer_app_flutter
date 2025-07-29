@@ -43,9 +43,16 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: PopScope(
+      child:
+      PopScope(
         onPopInvokedWithResult: (didPop, result) {
-          context.goNamed(Home.route);
+          final router = GoRouter.of(context);
+
+          if (router.canPop()) {
+            router.pop();
+          } else {
+            context.goNamed('home'); // or context.go('/home')
+          }
         },
         child: Scaffold(
           appBar: AppBar(
@@ -53,7 +60,13 @@ class _CartScreenState extends State<CartScreen> {
             elevation: 0,
             leading: IconButton(
               onPressed: () {
-                context.goNamed(Home.route);
+                final router = GoRouter.of(context);
+
+                if (router.canPop()) {
+                  router.pop();
+                } else {
+                  context.goNamed('home'); // or context.go('/home')
+                }
               },
               icon: const Icon(
                 Icons.keyboard_arrow_left_outlined,

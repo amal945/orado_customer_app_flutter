@@ -75,7 +75,7 @@ class CustomRestaurantTile extends StatelessWidget {
                                     onPressed: () {
                                       if (merchantId != null) {
                                         if (isFavourite) {
-                                          userProvider.removeFavourite(merchantId!);
+                                          userProvider.removeFavourite(merchantId!,context);
                                         } else {
                                           userProvider.addFavourite(FavouriteItem(
                                             id: merchantId!,

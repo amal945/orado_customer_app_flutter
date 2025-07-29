@@ -73,11 +73,14 @@ class HomeProvider extends ChangeNotifier {
       notifyListeners();
     });
 
-    _socket!.on('delivery_status_update', (data) {
+    _socket!.on('test_order_status', (data) {
       log("📦 Delivery update received: $data");
-      _liveDeliveryStatus = Map<String, dynamic>.from(data);
-      notifyListeners();
+      if (data is Map && data.containsKey("data")) {
+        _liveDeliveryStatus = Map<String, dynamic>.from(data["data"]);
+        notifyListeners();
+      }
     });
+
 
     _socket!.onDisconnect((_) {
       log("⚠️ Socket disconnected");
