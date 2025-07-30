@@ -27,7 +27,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       await Future.delayed(Duration(seconds: 1));
       final provider = context.read<UserProvider>();
       if (mounted) {
-         provider.fetchFavourites();
+         provider.fetchFavourites(context);
       }
     });
     super.initState();
@@ -84,7 +84,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               final item = userProvider.favourites[index];
               return CustomRestaurantTile(
                 merchantId: item.id,
-                image: item.images.isNotEmpty ? item.images.first : '',
+                image:item.images != null && item.images!.isNotEmpty ? item.images?.first : '',
                 name: item.name,
               );
             },

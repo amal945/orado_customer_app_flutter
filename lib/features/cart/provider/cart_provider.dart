@@ -8,12 +8,16 @@ import 'package:orado_customer/utilities/utilities.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/address_services.dart';
+import '../../../services/coupon_services.dart';
+import '../../../services/loyalty_services.dart';
 import '../../../services/price_summary_service.dart';
 import '../../../utilities/debouncer.dart';
 import '../../home/presentation/home_screen.dart';
 import '../../location/models/address_response_model.dart';
 import '../../location/provider/location_provider.dart';
+import '../../profile/model/loyalty_rules_model.dart';
 import '../models/cart_model.dart';
+import '../models/coupons_response_model.dart';
 import '../models/order_summary_model.dart' hide Data;
 import '../presentation/payment_gateway.dart';
 
@@ -25,10 +29,19 @@ class CartProvider extends ChangeNotifier {
   Data? _cartData;
   OrderPriceSummaryModel? priceSummary;
 
+  bool isDeliverable = true;
+
+  String deliveryErrorMessage = "";
+
+  String selectedCouponCode = "";
+
+  bool useLoyaltyPoint = false;
+
   final TextEditingController cookingInstruction = TextEditingController();
   final TextEditingController deliveryInstruction = TextEditingController();
   final TextEditingController receiverNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController loyaltyPointController = TextEditingController();
 
   final _debouncers = <String, Debouncer>{};
   final _priceService = OrderPriceSummaryService();
@@ -38,9 +51,77 @@ class CartProvider extends ChangeNotifier {
   List<Addresses> addresses = [];
 
   bool get isLoading => _isLoading;
+
   bool get isOrderPlacing => _isOrderPlacing;
+
   List<Products> get cartItems => _cartItems;
+
   Data? get cartData => _cartData;
+
+  List<Coupons> coupons = [];
+
+  Rules? rule;
+
+  int balance = 0;
+
+  Future<void> getRules() async {
+    putLoading(true);
+    try {
+      final response = await LoyaltyServices.getLoyaltyPointsRules();
+
+      if (response != null) {
+        rule = response.data;
+      }
+    } catch (e) {
+      log("$e");
+    }
+    putLoading(false);
+  }
+
+  Future<void> fetchBalance() async {
+    putLoading(true);
+    try {
+      balance = await LoyaltyServices.getLoyaltyPointsBalance();
+    } catch (e) {
+      log("$e");
+    }
+    putLoading(false);
+  }
+
+  toggleLoyaltyPoint() {
+    useLoyaltyPoint = !useLoyaltyPoint;
+    notifyListeners();
+  }
+
+  Future<void> setCouponCode({required String code}) async {
+    selectedCouponCode = code;
+    loadPriceSummary(
+        longitude: selectedLongitude!,
+        latitude: selectedLatitude!,
+        cartId: _cartData!.cartId!);
+  }
+
+  void removeCouponCode() {
+    selectedCouponCode = "";
+    loadPriceSummary(
+        longitude: selectedLongitude!,
+        latitude: selectedLatitude!,
+        cartId: _cartData!.cartId!);
+  }
+
+  Future<void> getAllCoupons({required String restaurantId}) async {
+    putLoading(true);
+    final response =
+        await CouponServices.getAllCoupons(restaurantId: restaurantId);
+
+    if (response != null && response.coupon != null) {
+      coupons.clear();
+      coupons.addAll(response.coupon ?? []);
+      print(coupons);
+    }
+
+    putLoading(false);
+  }
 
   /// ---- Receiver Info ----
   Future<void> fetchUserData() async {
@@ -60,17 +141,20 @@ class CartProvider extends ChangeNotifier {
     final phone = phoneNumberController.text.trim();
 
     if (name.isEmpty || phone.isEmpty) {
-      return showSnackBar(context, message: "Fields can't be empty", backgroundColor: Colors.red);
+      return showSnackBar(context,
+          message: "Fields can't be empty", backgroundColor: Colors.red);
     }
 
     if (!RegExp(r"^[a-zA-Z ]{2,}$").hasMatch(name)) {
       return showSnackBar(context,
-          message: "Enter a valid name (only letters, min 2 characters)", backgroundColor: Colors.red);
+          message: "Enter a valid name (only letters, min 2 characters)",
+          backgroundColor: Colors.red);
     }
 
     if (!RegExp(r"^[0-9]{10}$").hasMatch(phone)) {
       return showSnackBar(context,
-          message: "Enter a valid 10-digit phone number", backgroundColor: Colors.red);
+          message: "Enter a valid 10-digit phone number",
+          backgroundColor: Colors.red);
     }
 
     receiverName = name;
@@ -120,13 +204,18 @@ class CartProvider extends ChangeNotifier {
   Future<void> getAllCart(BuildContext context) async {
     putLoading(true);
     try {
+      await fetchBalance();
+      await getRules();
+
       final response = await CartServices.getAllCart();
       final products = response.data?.products;
 
       _cartItems.clear();
       _cartData = response.data;
 
-      if (response.messageType == "success" && products != null && products.isNotEmpty) {
+      if (response.messageType == "success" &&
+          products != null &&
+          products.isNotEmpty) {
         _cartItems.addAll(products);
         restaurantId = _cartData?.restaurantId ?? "";
         await loadInitialPriceSummary(context);
@@ -158,7 +247,8 @@ class CartProvider extends ChangeNotifier {
         selectedLongitude = location.longitude.toString();
       } else {
         return showSnackBar(context,
-            message: "Unable to fetch current location", backgroundColor: Colors.red);
+            message: "Unable to fetch current location",
+            backgroundColor: Colors.red);
       }
     }
 
@@ -181,12 +271,23 @@ class CartProvider extends ChangeNotifier {
       if (token == null) return;
 
       final result = await _priceService.fetchPriceSummary(
-        token: token,
-        longitude: longitude,
-        latitude: latitude,
-        cartId: cartId,
-      );
-      if (result != null) priceSummary = result;
+          token: token,
+          longitude: longitude,
+          latitude: latitude,
+          cartId: cartId,
+          couponCode: selectedCouponCode.isNotEmpty ? selectedCouponCode : null,
+          loyaltyPoints: loyaltyPointController.text.trim().isNotEmpty
+              ? loyaltyPointController.text.trim()
+              : null);
+
+      if (result != null && result.messageType == "success") {
+        priceSummary = result;
+        isDeliverable = true;
+        deliveryErrorMessage = "";
+      } else {
+        isDeliverable = false;
+        deliveryErrorMessage = result?.message ?? "Error can't deliver!";
+      }
     } finally {
       putLoading(false);
     }
@@ -220,7 +321,9 @@ class CartProvider extends ChangeNotifier {
       try {
         final response = await CartServices.addToCart(requestBody: {
           "restaurantId": restaurantId,
-          "products": [{"productId": productId, "quantity": quantity}],
+          "products": [
+            {"productId": productId, "quantity": quantity}
+          ],
         });
         log("Add to cart response: ${response.message}");
         await loadInitialPriceSummary(context);
@@ -231,7 +334,8 @@ class CartProvider extends ChangeNotifier {
   }
 
   void _setupDebouncerIfAbsent(String productId) {
-    _debouncers[productId] ??= Debouncer(delay: const Duration(milliseconds: 900));
+    _debouncers[productId] ??=
+        Debouncer(delay: const Duration(milliseconds: 900));
   }
 
   /// ---- Order Placement ----
@@ -244,13 +348,17 @@ class CartProvider extends ChangeNotifier {
         addressId: selectedAddressId!,
         paymentMethod: "cash",
       );
+
       if (response?.orderId != null) {
-        showSnackBar(context, message: response!.message ?? "", backgroundColor: Colors.green);
+        showSnackBar(context,
+            message: response!.message ?? "", backgroundColor: Colors.green);
         context.goNamed(Home.route);
       }
     } catch (e) {
-      showSnackBar(context, message: "$e", backgroundColor: AppColors.baseColor);
+      showSnackBar(context,
+          message: "$e", backgroundColor: AppColors.baseColor);
     }
+    getAllCart(context);
   }
 
   Future<void> placeRazorpayOrder({
@@ -269,7 +377,8 @@ class CartProvider extends ChangeNotifier {
       );
 
       if (response?.orderId == null) {
-        showSnackBar(context, message: "Failed to Place Order", backgroundColor: Colors.red);
+        showSnackBar(context,
+            message: "Failed to Place Order", backgroundColor: Colors.red);
         return;
       }
 
@@ -288,7 +397,8 @@ class CartProvider extends ChangeNotifier {
 
       if (result == null || result['success'] != true) {
         showSnackBar(context,
-            message: result?['message'] ?? "Payment was not completed", backgroundColor: Colors.red);
+            message: result?['message'] ?? "Payment was not completed",
+            backgroundColor: Colors.red);
         return;
       }
 
@@ -301,11 +411,13 @@ class CartProvider extends ChangeNotifier {
 
       if (verifyResponse?.messageType == "success") {
         showSnackBar(context,
-            message: verifyResponse!.message ?? "", backgroundColor: Colors.green);
+            message: verifyResponse!.message ?? "",
+            backgroundColor: Colors.green);
         context.goNamed(Home.route);
       }
     } catch (e) {
-      showSnackBar(context, message: "$e", backgroundColor: AppColors.baseColor);
+      showSnackBar(context,
+          message: "$e", backgroundColor: AppColors.baseColor);
     } finally {
       putPlaceOrderLoading(false);
     }
@@ -313,14 +425,16 @@ class CartProvider extends ChangeNotifier {
 
   bool _validateBeforePlacingOrder(BuildContext context) {
     if (cartData?.cartId == null) {
-      showSnackBar(context, message: "Cart is empty or invalid", backgroundColor: Colors.red);
+      showSnackBar(context,
+          message: "Cart is empty or invalid", backgroundColor: Colors.red);
       return false;
     }
     if (selectedAddressId == null) {
-      showSnackBar(context, message: "Please select a delivery address", backgroundColor: Colors.red);
+      showSnackBar(context,
+          message: "Please select a delivery address",
+          backgroundColor: Colors.red);
       return false;
     }
     return true;
   }
 }
-

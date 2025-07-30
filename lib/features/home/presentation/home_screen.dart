@@ -41,7 +41,7 @@ class _HomeState extends State<Home> {
         final userProvider = context.read<UserProvider>();
 
         await homeProvider.getHome(context);
-        await userProvider.fetchFavourites();
+        await userProvider.fetchFavourites(context);
 
         homeProvider.initSocket();
 

@@ -144,10 +144,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Divider(height: 1),
                 ListTile(
                   minVerticalPadding: 20,
-                  onTap: () {},
+                  onTap: () {
+
+                  },
                   leading: Icon(Icons.support_agent_outlined,
                       color: AppColors.baseColor),
-                  title: Text('Support',
+                  title: Text('Raise a Ticket',
                       style: AppStyles.getBoldTextStyle(fontSize: 20)),
                   trailing: Icon(Icons.arrow_forward_ios,
                       color: AppColors.baseColor, size: 16),

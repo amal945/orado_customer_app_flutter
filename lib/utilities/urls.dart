@@ -9,9 +9,9 @@ class Urls {
 
   // static const baserUrl = "https://forforntend-flutter.vercel.app/";
 
-  static const getLoyalty = "https://orado-backend.onrender.com/loyality";
+  static const getLoyalty = "${baserUrl}loyality";
 
-  static const getLoyaltyPointsBalance = "https://orado-backend.onrender.com/user/loyalty/balance";
+  static const getLoyaltyPointsBalance = "${baserUrl}user/loyalty/balance";
 
   static const login = "${baserUrl}user/login";
 

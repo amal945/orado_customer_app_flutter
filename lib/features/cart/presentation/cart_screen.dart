@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:orado_customer/features/cart/presentation/coupons.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
 import 'package:orado_customer/features/location/models/address_response_model.dart';
 import 'package:orado_customer/features/location/presentation/map_screen.dart';
@@ -11,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../../../utilities/common/custom_button.dart';
 import '../../../utilities/common/custom_dialog.dart';
 import '../../../utilities/common/custom_ui.dart';
+import '../../../utilities/common/loyalty_point_card.dart';
 import '../../../utilities/common/text_formfield.dart';
 import '../../../utilities/debouncer.dart';
 import '../../../utilities/orado_icon_icons.dart';
@@ -43,16 +45,16 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child:
-      PopScope(
+      child: PopScope(
         onPopInvokedWithResult: (didPop, result) {
-          final router = GoRouter.of(context);
-
-          if (router.canPop()) {
-            router.pop();
-          } else {
-            context.goNamed('home'); // or context.go('/home')
-          }
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final router = GoRouter.of(context);
+            if (router.canPop()) {
+              router.pop();
+            } else {
+              context.goNamed('home');
+            }
+          });
         },
         child: Scaffold(
           appBar: AppBar(
@@ -60,13 +62,14 @@ class _CartScreenState extends State<CartScreen> {
             elevation: 0,
             leading: IconButton(
               onPressed: () {
-                final router = GoRouter.of(context);
-
-                if (router.canPop()) {
-                  router.pop();
-                } else {
-                  context.goNamed('home'); // or context.go('/home')
-                }
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  final router = GoRouter.of(context);
+                  if (router.canPop()) {
+                    router.pop();
+                  } else {
+                    context.goNamed('home');
+                  }
+                });
               },
               icon: const Icon(
                 Icons.keyboard_arrow_left_outlined,
@@ -119,80 +122,113 @@ class _CartScreenState extends State<CartScreen> {
                 bottomNavigationBar: Card(
                   elevation: 18,
                   child: Container(
-                    height: 100,
+                    height: 120,
                     padding: const EdgeInsets.all(18),
                     color: Colors.white,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            InkWell(
-                              onTap: () => onTapPaymentMethod(
-                                (int? value) {
-                                  paymentMethod = value!;
-                                  setState(() {});
-                                  context.pop();
-                                },
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  const Row(
-                                    children: <Widget>[
-                                      Text('Pay using'),
-                                      Icon(Icons.keyboard_arrow_up_outlined),
-                                    ],
-                                  ),
-                                  Text(paymentMethod == 0
-                                      ? 'Razorpay'
-                                      : 'Cash on Delivery'),
-                                ],
-                              ),
-                            ),
-                            const Spacer(),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                        Consumer<CartProvider>(
+                          builder: (context, provider, _) {
+                            final hasError =
+                                provider.selectedAddressId == null ||
+                                    provider.selectedAddressId!.isEmpty ||
+                                    !provider.isDeliverable;
+
+                            if (hasError) {
+                              // Show only the relevant error message
+                              String errorMessage = '';
+                              if (provider.selectedAddressId == null ||
+                                  provider.selectedAddressId!.isEmpty) {
+                                errorMessage = "Please select an Address";
+                              } else if (!provider.isDeliverable) {
+                                errorMessage = provider.deliveryErrorMessage;
+                              }
+
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  errorMessage,
+                                  style: AppStyles.getBoldTextStyle(
+                                      fontSize: 14, color: Colors.red),
+                                  softWrap: true,
+                                  overflow: TextOverflow.visible,
                                 ),
-                                backgroundColor: AppColors.baseColor,
-                                foregroundColor: Colors.white,
-                              ),
-                              onPressed: () async {
-                                if (paymentMethod == 0) {
-                                  cartProvider.placeRazorpayOrder(
-                                      context: context, amount: grandTotal);
-                                } else {
-                                  cartProvider.placeCashOnDeliveryOrder(
-                                      context: context);
-                                }
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: cartProvider
-                                        .isLoading // Consider if this loading applies to order placement only
-                                    ? BuildLoadingWidget()
-                                    : Row(
+                              );
+                            }
+
+                            // No error → show full row
+                            return Row(
+                              children: <Widget>[
+                                InkWell(
+                                  onTap: () => onTapPaymentMethod(
+                                    (int? value) {
+                                      paymentMethod = value!;
+                                      setState(() {});
+                                      context.pop();
+                                    },
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      const Row(
                                         children: <Widget>[
-                                          Column(
-                                            children: <Widget>[
-                                              const Text("total cost"),
-                                              Text(
-                                                '${AppStrings.inrSymbol}${grandTotal.toStringAsFixed(2)}',
-                                                style: AppStyles
-                                                    .getMediumTextStyle(
-                                                        fontSize: 13),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(width: 12),
-                                          const Text('Place order'),
+                                          Text('Pay using'),
+                                          Icon(
+                                              Icons.keyboard_arrow_up_outlined),
                                         ],
                                       ),
-                              ),
-                            ),
-                          ],
+                                      Text(paymentMethod == 0
+                                          ? 'Razorpay'
+                                          : 'Cash on Delivery'),
+                                    ],
+                                  ),
+                                ),
+                                const Spacer(),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    backgroundColor: AppColors.baseColor,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    if (paymentMethod == 0) {
+                                      cartProvider.placeRazorpayOrder(
+                                          context: context, amount: grandTotal);
+                                    } else {
+                                      cartProvider.placeCashOnDeliveryOrder(
+                                          context: context);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: cartProvider.isLoading
+                                        ? BuildLoadingWidget()
+                                        : Row(
+                                            children: <Widget>[
+                                              Column(
+                                                children: <Widget>[
+                                                  const Text("total cost"),
+                                                  Text(
+                                                    '${AppStrings.inrSymbol}${grandTotal.toStringAsFixed(2)}',
+                                                    style: AppStyles
+                                                        .getMediumTextStyle(
+                                                            fontSize: 13),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(width: 12),
+                                              const Text('Place order'),
+                                            ],
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -239,7 +275,7 @@ class _CartScreenState extends State<CartScreen> {
                           children: <Widget>[
                             const SizedBox(width: 5),
                             GestureDetector(
-                              onTap: ()async {
+                              onTap: () async {
                                 final newQuantity = item.quantity! - 1;
 
                                 if (newQuantity >= 0) {
@@ -249,8 +285,6 @@ class _CartScreenState extends State<CartScreen> {
                                       productId: item.productId!,
                                       quantity: newQuantity,
                                       context: context);
-
-
                                 }
                                 // If quantity < 1, do nothing — prevent from going below 1
                                 context
@@ -318,22 +352,36 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Center(
-                      child: Row(
-                        children: <Widget>[
-                          Image.asset('assets/images/offer.png', height: 20),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Restaurant coupon available',
-                            style: AppStyles.getMediumTextStyle(fontSize: 12),
-                          ),
-                        ],
+
+                  LoyaltyPointsCard(),
+
+                  const SizedBox(height: 20),
+                  InkWell(
+                    onTap: () {
+                      context.pushNamed(
+                        CouponScreen.route,
+                        pathParameters: {
+                          'restaurantId': cartProvider.restaurantId
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Center(
+                        child: Row(
+                          children: <Widget>[
+                            Image.asset('assets/images/offer.png', height: 20),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Restaurant coupon available',
+                              style: AppStyles.getMediumTextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -464,32 +512,9 @@ class _CartScreenState extends State<CartScreen> {
   void onTapTotalBill(BuildContext context, CartProvider provider) async {
     final orderController = Provider.of<CartProvider>(context, listen: false);
 
-    final location =
-        await context.read<LocationProvider>().currentLocationLatLng;
-
-    if (location == null ||
-        location.latitude == null ||
-        location.longitude == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to fetch current location")),
-      );
-      return;
-    }
-
-    final latitude = location.latitude.toString();
-    final longitude = location.longitude.toString();
-
-    // Ensure cartData and cartId are not null before calling loadPriceSummary
-    if (provider.cartData == null || provider.cartData!.cartId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cart data is not available.")),
-      );
-      return;
-    }
-
     await orderController.loadPriceSummary(
-      longitude: longitude,
-      latitude: latitude,
+      longitude: provider.selectedLongitude!,
+      latitude: provider.selectedLatitude!,
       cartId: provider.cartData!.cartId!,
     );
 
@@ -528,6 +553,52 @@ class _CartScreenState extends State<CartScreen> {
                     title: e.name ?? '',
                     amt: e.amount ?? '0.00',
                   ),
+                ),
+                Visibility(
+                  visible: provider.selectedCouponCode.isNotEmpty,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text(
+                        "Coupon Applied : ${summary.promoCodeInfo?.code}",
+                        maxLines: 2,
+                        overflow: TextOverflow.visible,
+                        style: AppStyles.getMediumTextStyle(fontSize: 13),
+                      ),
+                      Text(
+                        '${AppStrings.inrSymbol}${summary.promoCodeInfo?.discount}',
+                        maxLines: 3,
+                        overflow: TextOverflow.visible,
+                        style: AppStyles.getMediumTextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 8,
+                ),
+                Visibility(
+                  visible: provider.useLoyaltyPoint,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text(
+                        "Loyalty Point Discount : ${summary.promoCodeInfo?.code}",
+                        maxLines: 2,
+                        overflow: TextOverflow.visible,
+                        style: AppStyles.getMediumTextStyle(fontSize: 13),
+                      ),
+                      Text(
+                        '${AppStrings.inrSymbol}${summary.promoCodeInfo?.discount}',
+                        maxLines: 3,
+                        overflow: TextOverflow.visible,
+                        style: AppStyles.getMediumTextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 8,
                 ),
                 buidItems(
                   title: 'Delivery partner fee',

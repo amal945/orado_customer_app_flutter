@@ -9,10 +9,11 @@ import 'package:orado_customer/utilities/urls.dart';
 import 'package:http/http.dart' as http;
 
 class FavouriteServices {
-  static Future<FavouriteListResponse> getFavourites() async {
+  static Future<FavouriteListResponse> getFavourites(
+      {required String lat, required String long}) async {
     try {
       final token = await LocationProvider.getToken();
-      final url = Uri.parse(Urls.getFavourite);
+      final url = Uri.parse("${Urls.getFavourite}?lat=$lat&lng=lng");
       final response = await http.get(
         url,
         headers: {
@@ -63,7 +64,8 @@ class FavouriteServices {
     }
   }
 
-  static Future<FavouriteListResponse?> removeFavourite({required String restaurantId}) async {
+  static Future<FavouriteListResponse?> removeFavourite(
+      {required String restaurantId}) async {
     try {
       final token = await LocationProvider.getToken();
       final url = Uri.parse('${Urls.removeFavourite}');

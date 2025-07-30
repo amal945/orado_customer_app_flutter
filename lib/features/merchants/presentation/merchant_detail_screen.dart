@@ -81,9 +81,9 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     title: TextField(
                       controller: provider.searchController,
                       style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: "Search food...",
-                        hintStyle: TextStyle(color: Colors.white70),
+                        hintStyle: const TextStyle(color: Colors.white70),
                         border: InputBorder.none,
                       ),
                       onChanged: provider.filterMenuItems,
@@ -432,6 +432,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           else
                                             FoodsListingCard(
                                               items: provider.menuItems,
+                                              // Always use menuItems
                                               restaurantId: widget.id!,
                                             ),
 

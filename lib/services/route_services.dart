@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/auth/presentation/otp_screen.dart';
 import 'package:orado_customer/features/auth/presentation/otp_screen.dart';
 import 'package:orado_customer/features/cart/presentation/cart_screen.dart';
+import 'package:orado_customer/features/cart/presentation/coupons.dart';
+import 'package:orado_customer/features/cart/presentation/coupons.dart';
+import 'package:orado_customer/features/cart/presentation/coupons.dart';
 import 'package:orado_customer/features/cart/presentation/order_status_screen.dart';
 import 'package:orado_customer/features/home/presentation/home_screen.dart';
 import 'package:orado_customer/features/location/models/address_response_model.dart';
@@ -124,6 +127,18 @@ final router = GoRouter(
           pageBuilder: (context, state) =>
               getCustomTransition(state, const LoyaltyInfoScreen()),
         ),
+        GoRoute(
+          path: '${CouponScreen.route}/:restaurantId',
+          name: CouponScreen.route,
+          pageBuilder: (context, state) {
+            final restaurantId = state.pathParameters['restaurantId']!;
+            return getCustomTransition(
+              state,
+              CouponScreen(restaurantId: restaurantId),
+            );
+          },
+        ),
+
         GoRoute(
           path: MapScreen.route,
           name: MapScreen.route,

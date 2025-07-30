@@ -6,21 +6,29 @@ OrderPriceSummaryModel orderPriceSummaryModelFromJson(String str) =>
 String orderPriceSummaryModelToJson(OrderPriceSummaryModel data) =>
     json.encode(data.toJson());
 
+// "code" : "OUT_OF_DELIVERY_AREA",
+// "error" : "Out of Delivery Area",
 class OrderPriceSummaryModel {
   String? message;
   String? messageType;
+  String? code;
+  String? error;
   Data? data;
 
   OrderPriceSummaryModel({
     this.message,
     this.messageType,
     this.data,
+    this.code,
+    this.error,
   });
 
   factory OrderPriceSummaryModel.fromJson(Map<String, dynamic> json) =>
       OrderPriceSummaryModel(
         message: json["message"],
         messageType: json["messageType"],
+        code: json["code"],
+        error: json["error"],
         data: json["data"] == null ? null : Data.fromJson(json["data"]),
       );
 
@@ -45,6 +53,9 @@ class Data {
   String? surgeReason;
   String? offersApplied;
   String? isOffer;
+  String? isPromo;
+  PromoCodeInfo? promoCodeInfo;
+  String? totalDiscount;
   List<Tax>? taxes;
 
   Data({
@@ -61,6 +72,9 @@ class Data {
     this.surgeReason,
     this.offersApplied,
     this.isOffer,
+    this.isPromo,
+    this.promoCodeInfo,
+    this.totalDiscount,
     this.taxes,
   });
 
@@ -78,6 +92,11 @@ class Data {
         surgeReason: json["surgeReason"],
         offersApplied: json["offersApplied"],
         isOffer: json["isOffer"],
+        isPromo: json["isPromo"],
+        promoCodeInfo: json["promoCodeInfo"] == null
+            ? null
+            : PromoCodeInfo.fromJson(json["promoCodeInfo"]),
+        totalDiscount: json["totalDiscount"],
         taxes: json["taxes"] == null
             ? []
             : List<Tax>.from(json["taxes"]!.map((x) => Tax.fromJson(x))),
@@ -97,6 +116,9 @@ class Data {
         "surgeReason": surgeReason,
         "offersApplied": offersApplied,
         "isOffer": isOffer,
+        "isPromo": isPromo,
+        "promoCodeInfo": promoCodeInfo?.toJson(),
+        "totalDiscount": totalDiscount,
         "taxes": taxes == null
             ? []
             : List<dynamic>.from(taxes!.map((x) => x.toJson())),
@@ -124,5 +146,35 @@ class Tax {
         "name": name,
         "percentage": percentage,
         "amount": amount,
+      };
+}
+
+class PromoCodeInfo {
+  String? code;
+  String? applied;
+  List<String>? messages;
+  String? discount;
+
+  PromoCodeInfo({
+    this.code,
+    this.applied,
+    this.messages,
+    this.discount,
+  });
+
+  factory PromoCodeInfo.fromJson(Map<String, dynamic> json) => PromoCodeInfo(
+        code: json["code"],
+        applied: json["applied"],
+        messages:
+            json["messages"] == null ? [] : List<String>.from(json["messages"]),
+        discount: json["discount"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "code": code,
+        "applied": applied,
+        "messages":
+            messages == null ? [] : List<dynamic>.from(messages!.map((x) => x)),
+        "discount": discount,
       };
 }

@@ -30,14 +30,18 @@ class FavouriteListResponse {
 class FavouriteItem {
   final String? id;
   final String? name;
-  final List<String> images;
+  final List<String>? images;
   final int? rating;
+  final String? outOfDeliveryArea;
+  final String? isOpen;
 
   FavouriteItem({
     this.id,
     this.name,
     this.images = const [],
     this.rating,
+    this.outOfDeliveryArea,
+    this.isOpen,
   });
 
   factory FavouriteItem.fromJson(Map<String, dynamic> json) {
@@ -45,17 +49,21 @@ class FavouriteItem {
       id: json['_id'] as String?,
       name: json['name'] as String?,
       images: (json['images'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
+          ?.map((e) => e as String)
+          .toList() ??
           [],
       rating: json['rating'] as int?,
+      outOfDeliveryArea: json['outOfDeliveryArea'] as String?,
+      isOpen: json['isOpen'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        '_id': id,
-        'name': name,
-        'images': images,
-        'rating': rating,
-      };
+    '_id': id,
+    'name': name,
+    'images': images,
+    'rating': rating,
+    'outOfDeliveryArea': outOfDeliveryArea,
+    'isOpen': isOpen,
+  };
 }

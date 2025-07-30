@@ -27,7 +27,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
       if (mounted) {
         final provider = context.read<UserProvider>();
-        provider.fetchOrders();
+        provider.fetchOrders(context);
       }
     });
     super.initState();
@@ -65,7 +65,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.no_food,size: 64,color: Colors.grey,),
+                Icon(
+                  Icons.no_food,
+                  size: 64,
+                  color: Colors.grey,
+                ),
                 SizedBox(height: 16),
                 Text(
                   'No Orders yet',
@@ -83,25 +87,14 @@ class _OrdersScreenState extends State<OrdersScreen> {
         }
 
         return Padding(
-          padding: const EdgeInsets.only(top: 110.0),
+          padding: const EdgeInsets.only(bottom: 80.0, top: 50),
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(vertical: 12),
             itemCount: provider.pastOrder.length,
             itemBuilder: (context, index) {
               final order = provider.pastOrder[index];
               return CustomPastOrder(
-                restaurantName: order.restaurant?.name ?? "",
-                location: order.restaurant?.address ?? "",
-                price: order.totalAmount.toString() ?? "",
-                items: order.orderItems != null
-                    ? order.orderItems!
-                        .where((item) =>
-                            item.name != null && item.quantity != null)
-                        .map((item) => "${item.name} x${item.quantity}")
-                        .join(', ')
-                    : "",
-                time: order.orderTime ?? "",
-                isDelivered: order.orderStatus ?? "",
+                data: order,
               );
             },
           ),

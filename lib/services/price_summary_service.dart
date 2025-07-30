@@ -2,20 +2,21 @@ import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:orado_customer/features/cart/models/order_summary_model.dart';
+import 'package:orado_customer/utilities/urls.dart';
 
 class OrderPriceSummaryService {
-  final String _baseUrl =
-      'https://forforntend-flutter.vercel.app/order/pricesummary';
-
-  Future<OrderPriceSummaryModel?> fetchPriceSummary({
-    required String token,
-    required String longitude,
-    required String latitude,
-    required String cartId,
-  }) async {
+  Future<OrderPriceSummaryModel?> fetchPriceSummary(
+      {required String token,
+      required String longitude,
+      required String latitude,
+      required String cartId,
+      String? couponCode,
+      String? loyaltyPoints}) async {
+    // 76.3019
+    //9.9921
     try {
       final response = await http.post(
-        Uri.parse(_baseUrl),
+        Uri.parse("${Urls.baserUrl}order/pricesummary"),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -24,6 +25,9 @@ class OrderPriceSummaryService {
           "longitude": longitude,
           "latitude": latitude,
           "cartId": cartId,
+          if (couponCode != null) "promoCode": couponCode,
+          if (loyaltyPoints != null) "loyaltyPointsToRedeem": "20",
+          "useLoyaltyPoints": loyaltyPoints != null,
         }),
       );
 

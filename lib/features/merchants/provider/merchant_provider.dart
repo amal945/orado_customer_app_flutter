@@ -41,16 +41,21 @@ class MerchantProvider extends ChangeNotifier {
 
   void toggleFoodTypeFilter(String foodType) {
     if (activeFilter == foodType) {
-      // If clicking the already active filter, show all
       activeFilter = null;
-      menuItems = List.from(_originalMenuItems);
+      searchController.clear(); // Clear search when removing filter
     } else {
-      // Apply new filter
       activeFilter = foodType;
-      menuItems = _originalMenuItems.where((item) =>
-      item.foodType?.toLowerCase() == foodType.toLowerCase()
-      ).toList();
+      searchController.clear(); // Clear search when applying new filter
     }
+    menuItems = List.from(_originalMenuItems);
+
+    if (activeFilter != null) {
+      menuItems = menuItems
+          .where((item) =>
+              item.foodType?.toLowerCase() == activeFilter?.toLowerCase())
+          .toList();
+    }
+
     notifyListeners();
   }
 
@@ -96,7 +101,8 @@ class MerchantProvider extends ChangeNotifier {
 
       if (response.messageType == "success") {
         menuItems.clear();
-        final data = response.data.menu.expand((category) => category.items).toList();
+        final data =
+            response.data.menu.expand((category) => category.items).toList();
         menuItems.addAll(data);
         storeOriginalItems(); // Store the original items
       }
@@ -108,15 +114,39 @@ class MerchantProvider extends ChangeNotifier {
 
   void filterMenuItems(String query) {
     if (query.trim().isEmpty) {
+      // When search is cleared, restore original items
+      menuItems = List.from(_originalMenuItems);
       isSearching = false;
-      filteredMenuItems.clear();
+      // If there was an active filter, reapply it
+      if (activeFilter != null) {
+        menuItems = _originalMenuItems
+            .where((item) =>
+                item.foodType?.toLowerCase() == activeFilter?.toLowerCase())
+            .toList();
+      }
     } else {
-      isSearching = true;
-      filteredMenuItems = menuItems
+      // Filter based on search query
+      final filtered = _originalMenuItems
           .where((item) =>
               item.name?.toLowerCase().contains(query.toLowerCase()) ?? false)
           .toList();
+
+      // If there's an active filter, apply it to the search results
+      if (activeFilter != null) {
+        menuItems = filtered
+            .where((item) =>
+                item.foodType?.toLowerCase() == activeFilter?.toLowerCase())
+            .toList();
+      } else {
+        menuItems = filtered;
+      }
     }
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 }

@@ -6,6 +6,7 @@ import 'package:orado_customer/features/cart/models/payment_verification_model.d
 import 'package:orado_customer/features/home/models/active_order_model.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/user/model/past_order_model.dart';
+import 'package:orado_customer/features/user/model/re_order_response_model.dart';
 import 'package:orado_customer/utilities/urls.dart';
 
 class OrderService {
@@ -37,8 +38,7 @@ class OrderService {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return PlaceOrderResponseModel.fromJson(data);
       } else {
         log("Failed to place order: ${response.body}");
@@ -58,9 +58,7 @@ class OrderService {
     try {
       final url = Uri.parse("${Urls.baserUrl}order/verify-payment");
 
-
       final token = await LocationProvider.getToken();
-
 
       final response = await http.post(
         url,
@@ -83,18 +81,18 @@ class OrderService {
 
         return data;
       } else {
-
         return null;
-
       }
     } catch (e) {
       rethrow;
     }
   }
 
-  static Future<PastOrderModel?> getAllOrders() async {
+  static Future<PastOrderModel?> getAllOrders(
+      {required String lat, required String long}) async {
     try {
-      final url = Uri.parse("${Urls.baserUrl}order/customer/orders");
+      final url =
+          Uri.parse("${Urls.baserUrl}order/customer/orders?lat=$lat&lng=$long");
 
       final token = await LocationProvider.getToken();
 
@@ -138,6 +136,34 @@ class OrderService {
 
       if (response.statusCode == 200) {
         final data = ActiveOrderModel.fromJson(json);
+        return data;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  static Future<ReOrderResponseModel?> reOrder(
+      {required String orderId}) async {
+    try {
+      final token = await LocationProvider.getToken();
+      final url = Uri.parse("${Urls.baserUrl}order/reorder/$orderId");
+
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      final json = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = ReOrderResponseModel.fromJson(json);
+
         return data;
       } else {
         return null;
