@@ -4,6 +4,7 @@ import 'package:orado_customer/features/auth/presentation/get_started_screen.dar
 import 'package:orado_customer/features/profile/presentation/edit_profile_screen.dart';
 import 'package:orado_customer/features/profile/presentation/loyalty_info_screen.dart';
 import 'package:orado_customer/features/profile/provider/profile_provider.dart';
+import 'package:orado_customer/features/ticket/presentation/ticket_screen.dart';
 import 'package:orado_customer/utilities/common/custom_coloured_button.dart';
 import 'package:orado_customer/utilities/utilities.dart';
 import 'package:provider/provider.dart';
@@ -24,8 +25,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-        () => context.read<ProfileProvider>().fetchAndUpdateProfile());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (mounted) {
+        context.read<ProfileProvider>().fetchAndUpdateProfile();
+      }
+    });
   }
 
   @override
@@ -112,7 +116,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 24),
-
           _cardTitle('More'),
           const SizedBox(height: 16),
           Card(
@@ -141,27 +144,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: Icon(Icons.arrow_forward_ios,
                       color: AppColors.baseColor, size: 16),
                 ),
-                // const Divider(height: 1),
-                // ListTile(
-                //   minVerticalPadding: 20,
-                //   onTap: () {
-                //
-                //   },
-                //   leading: Icon(Icons.support_agent_outlined,
-                //       color: AppColors.baseColor),
-                //   title: Text('Raise a Ticket',
-                //       style: AppStyles.getBoldTextStyle(fontSize: 20)),
-                //   trailing: Icon(Icons.arrow_forward_ios,
-                //       color: AppColors.baseColor, size: 16),
-                // ),
+                const Divider(height: 1),
+                ListTile(
+                  minVerticalPadding: 20,
+                  onTap: () {
+                    context.pushNamed(TicketScreen.route);
+                  },
+                  leading: Icon(Icons.support_agent_outlined,
+                      color: AppColors.baseColor),
+                  title: Text('Raise a Ticket',
+                      style: AppStyles.getBoldTextStyle(fontSize: 20)),
+                  trailing: Icon(Icons.arrow_forward_ios,
+                      color: AppColors.baseColor, size: 16),
+                ),
                 const Divider(height: 1),
                 ListTile(
                   minVerticalPadding: 20,
                   onTap: () {
                     context.pushNamed(LoyaltyInfoScreen.route);
                   },
-                  leading: Icon(Icons.verified_outlined,
-                      color: AppColors.baseColor),
+                  leading:
+                      Icon(Icons.verified_outlined, color: AppColors.baseColor),
                   title: Text('Loyalty Points',
                       style: AppStyles.getBoldTextStyle(fontSize: 20)),
                   trailing: Icon(Icons.arrow_forward_ios,
@@ -170,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const Divider(height: 1),
                 ListTile(
                   minVerticalPadding: 20,
-                  onTap: ()  {
+                  onTap: () {
                     showLogoutConfirmationDialog(
                       context,
                       onLogout: () async {

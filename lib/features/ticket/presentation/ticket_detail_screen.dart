@@ -1,242 +1,138 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-import 'raise_ticket_screen.dart';
+import '../../../utilities/colors.dart';
+import '../../../utilities/common/loading_widget.dart';
+import '../../../utilities/styles.dart';
+import '../model/reply_model.dart';
+import '../model/ticket_detail_model.dart';
+import '../provider/ticket_provider.dart';
+
+/// UI model for reply (derived from backend Replies)
+
+/// Helpers to adapt backend responses into UI-friendly formats:
+
+/// Convenient wrapper for styled text
+TextStyle boldStyle(double size, Color color) =>
+    AppStyles.getBoldTextStyle(fontSize: size, color: color);
 
 class TicketDetailScreen extends StatefulWidget {
-  final Ticket ticket;
+  final String ticketId;
 
-  TicketDetailScreen({required this.ticket});
+  const TicketDetailScreen({super.key, required this.ticketId});
+
+  static const String route = 'ticket-detail-screen';
 
   @override
   _TicketDetailScreenState createState() => _TicketDetailScreenState();
 }
 
 class _TicketDetailScreenState extends State<TicketDetailScreen> {
-  final TextEditingController _replyController = TextEditingController();
-  late List<Reply> replies;
-  String selectedStatus = 'Open';
-  String selectedPriority = 'Medium';
-
-  List<String> statusOptions = ['Open', 'In Progress', 'Resolved'];
-  List<String> priorityOptions = ['Low', 'Medium', 'High'];
-
   @override
   void initState() {
     super.initState();
-    replies = List.from(widget.ticket.replies);
-    selectedStatus = widget.ticket.status;
-    selectedPriority = widget.ticket.priority;
-  }
-
-  String formatDateTime(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
-
-  void _addReply() {
-    if (_replyController.text.trim().isNotEmpty) {
-      setState(() {
-        replies.add(Reply(
-          sender: 'You',
-          message: _replyController.text.trim(),
-          timestamp: DateTime.now(),
-        ));
-        _replyController.clear();
-      });
-    }
-  }
-
-  void _closeTicket() {
-    setState(() {
-      selectedStatus = 'Resolved';
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context
+            .read<TicketProvider>()
+            .getTicketDetails(ticketId: widget.ticketId);
+      }
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Ticket has been closed')),
+  }
+
+  Widget buildSubjectCard(String subject, String message) {
+    return SizedBox(
+      width: double.infinity,
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.only(bottom: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Subject: "$subject"',
+                style: boldStyle(20, Colors.black87),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Initial Message:',
+                style: boldStyle(14, Colors.grey.shade800),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                message,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Icon(Icons.build, size: 20),
-            SizedBox(width: 8),
-            Text('Ticket #${widget.ticket.id}'),
-          ],
-        ),
+  Widget _buildReplyBubble(Reply reply) {
+    final provider = context.read<TicketProvider>();
+    final isAdmin = reply.isAdmin;
+    final alignment =
+        isAdmin ? CrossAxisAlignment.start : CrossAxisAlignment.end;
+    final bgColor = isAdmin ? Colors.grey.shade100 : const Color(0xFFFFF1EF);
+    final borderRadius = BorderRadius.only(
+      topLeft: const Radius.circular(16),
+      topRight: const Radius.circular(16),
+      bottomLeft: Radius.circular(isAdmin ? 4 : 16),
+      bottomRight: Radius.circular(isAdmin ? 16 : 4),
+    );
+    final avatar = CircleAvatar(
+      radius: 14,
+      backgroundColor: isAdmin ? Colors.blue.shade100 : Colors.green.shade100,
+      child: Icon(
+        isAdmin ? Icons.support_agent_rounded : Icons.person,
+        size: 16,
+        color: isAdmin ? Colors.blue : Colors.green,
       ),
-      body: Column(
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment:
+            isAdmin ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: [
-          // Status and Priority Section
-          Container(
-            padding: EdgeInsets.all(16),
-            color: Colors.grey[100],
-            child: Row(
-              children: [
-                Text('Status: '),
-                DropdownButton<String>(
-                  value: selectedStatus,
-                  items: statusOptions.map((String status) {
-                    return DropdownMenuItem<String>(
-                      value: status,
-                      child: Text(status),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedStatus = newValue!;
-                    });
-                  },
-                ),
-                SizedBox(width: 20),
-                Text('Priority: '),
-                DropdownButton<String>(
-                  value: selectedPriority,
-                  items: priorityOptions.map((String priority) {
-                    return DropdownMenuItem<String>(
-                      value: priority,
-                      child: Text(priority),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedPriority = newValue!;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
+          if (isAdmin) avatar,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Container(
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: borderRadius,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment:
+                    isAdmin ? CrossAxisAlignment.start : CrossAxisAlignment.end,
                 children: [
-                  // Subject and Initial Message
-                  Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Subject: "${widget.ticket.subject}"',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Initial Message:',
-                            style: TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          SizedBox(height: 4),
-                          Text(widget.ticket.initialMessage),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 16),
-
-                  // Replies Section
                   Text(
-                    '🗨️ Replies',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    reply.message,
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
-                  SizedBox(height: 8),
-
-                  ...replies.map((reply) => Card(
-                    margin: EdgeInsets.symmetric(vertical: 4),
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                reply.isAdmin ? '🛡 ${reply.sender}' : '👤 ${reply.sender}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: reply.isAdmin ? Colors.blue : Colors.green,
-                                ),
-                              ),
-                              Spacer(),
-                              Text(
-                                formatDateTime(reply.timestamp),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 4),
-                          Text(reply.message),
-                        ],
-                      ),
-                    ),
-                  )).toList(),
-
-                  SizedBox(height: 16),
-
-                  // Add Reply Section
-                  Text(
-                    '✏️ Add a Reply',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  TextField(
-                    controller: _replyController,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Type your reply here...',
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _addReply,
-                      child: Text('Send Reply'),
-                    ),
-                  ),
-
-                  SizedBox(height: 16),
-
-                  // Action Buttons
+                  const SizedBox(height: 8),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: selectedStatus != 'Resolved' ? _closeTicket : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          child: Text('Close Ticket'),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey,
-                          ),
-                          child: Text('Back'),
-                        ),
+                      Text(
+                        provider.formatDateTime(reply.timestamp),
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                       ),
                     ],
                   ),
@@ -244,8 +140,235 @@ class _TicketDetailScreenState extends State<TicketDetailScreen> {
               ),
             ),
           ),
+          if (!isAdmin) const SizedBox(width: 8),
+          if (!isAdmin)
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: Colors.green.shade100,
+              child: const Icon(
+                Icons.person,
+                size: 16,
+                color: Colors.green,
+              ),
+            ),
         ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: AppColors.baseColor,
+        elevation: 0,
+        leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back, color: Colors.white)),
+        title: Text(
+          'Ticket #${widget.ticketId}',
+          style: boldStyle(16, Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: Consumer<TicketProvider>(builder: (context, provider, _) {
+        if (provider.isLoading) {
+          return BuildLoadingWidget(
+              withCenter: true, color: AppColors.baseColor);
+        }
+
+        final data = provider.ticketDetails;
+        if (data == null) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.support_agent_rounded,
+                      size: 72, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Couldn't fetch ticket detail",
+                    style: boldStyle(20, Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.baseColor,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 14, horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      provider.getTicketDetails(ticketId: widget.ticketId);
+                    },
+                    child: Text(
+                      "Retry",
+                      style: boldStyle(16, Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final displayStatus = provider.normalizeStatus(data.status);
+        final displayPriority = provider.normalizePriority(data.priority);
+        final displayReplies =
+            (data.replies ?? []).map(provider.mapBackendReply).toList();
+
+        return SafeArea(
+          child: Column(
+            children: [
+              // Top info: status & priority
+              Container(
+                width: double.infinity,
+                color: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: provider.getStatusColors(displayStatus),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        provider.getStatusLabel(displayStatus),
+                        style: boldStyle(12, Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: provider.getPriorityColor(displayPriority)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            provider.getPriorityIconData(displayPriority),
+                            size: 16,
+                            color: provider.getPriorityColor(displayPriority),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            displayPriority,
+                            style: boldStyle(
+                                12, provider.getPriorityColor(displayPriority)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      buildSubjectCard(data.subject ?? '', data.message ?? ''),
+                      if (displayReplies.isNotEmpty) ...[
+                        const Text(
+                          ' Replies',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                      ] else ...[
+                        const Text(
+                          'No replies yet',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      ...displayReplies.map((r) => _buildReplyBubble(r)),
+                      const SizedBox(height: 80),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Reply input area
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(color: Colors.grey.shade300, width: 1),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: provider.replyController,
+                      focusNode: provider.replyFocus,
+                      maxLines: null,
+                      minLines: 1,
+                      decoration: InputDecoration(
+                        hintText: 'Add a Message to this Ticket',
+                        hintStyle: AppStyles.getBoldTextStyle(
+                            fontSize: 14, color: Colors.grey),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: provider.isLoading
+                            ? null
+                            : () {
+                                provider.sendTicketReply(
+                                    context: context,
+                                    ticketId: widget.ticketId);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.baseColor,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: provider.isLoading
+                            ? LoadingAnimationWidget.progressiveDots(
+                                color: Colors.white, size: 30)
+                            : Text(
+                                'Send Reply',
+                                style: boldStyle(16, Colors.white),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
     );
   }
 }

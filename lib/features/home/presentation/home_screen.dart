@@ -43,8 +43,12 @@ class _HomeState extends State<Home> {
         final homeProvider = context.read<HomeProvider>();
         final userProvider = context.read<UserProvider>();
 
-        await homeProvider.getHome(context);
-        await userProvider.fetchFavourites(context);
+        if (mounted) {
+          await homeProvider.getHome(context);
+        }
+        if (mounted) {
+          await userProvider.fetchFavourites(context);
+        }
       }
     });
   }
@@ -208,59 +212,84 @@ class _HomeState extends State<Home> {
                                     },
                                   ),
                                 ] else ...[
-                                  Card(
-                                    color: Colors.grey.shade100,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                    child: Container(
-                                      height: 170,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        image: const DecorationImage(
-                                          fit: BoxFit.cover,
-                                          image: AssetImage(
-                                              'assets/images/image.png'),
-                                        ),
+                                  Container(
+                                    height: 170,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      image: const DecorationImage(
+                                        image: AssetImage(
+                                            'assets/images/image.png'),
+                                        fit: BoxFit.cover,
                                       ),
-                                      width: double.infinity,
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(18.0),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: <Widget>[
-                                              Text(
-                                                'Free Delivery For \nNext 3 month',
-                                                style:
-                                                    AppStyles.getBoldTextStyle(
-                                                        fontSize: 17),
-                                              ),
-                                              const SizedBox(height: 20),
-                                              Row(
-                                                children: <Widget>[
-                                                  Text(
-                                                    'Order Now',
-                                                    style: AppStyles
-                                                        .getSemiBoldTextStyle(
-                                                            color: AppColors
-                                                                .baseColor,
-                                                            fontSize: 12),
-                                                  ),
-                                                  Icon(
-                                                    Icons.arrow_right_alt,
-                                                    color: AppColors.baseColor,
-                                                  )
-                                                ],
-                                              ),
-                                            ],
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        )
+                                      ],
+                                    ),
+                                    clipBehavior: Clip.hardEdge,
+                                    // requires Flutter 3.7+; ensures children respect radius
+                                    child: Stack(
+                                      children: [
+                                        // Optional subtle overlay to soften the image
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            color:
+                                                Colors.white.withOpacity(0.06),
                                           ),
                                         ),
-                                      ),
+
+                                        // Main content
+                                        Padding(
+                                          padding: const EdgeInsets.all(18.0),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Text(
+                                                  'Free Delivery For \nNext 3 month',
+                                                  style: AppStyles
+                                                          .getBoldTextStyle(
+                                                              fontSize: 17)
+                                                      .copyWith(
+                                                          color:
+                                                              Colors.black87),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                Row(
+                                                  children: <Widget>[
+                                                    Text(
+                                                      'Order Now',
+                                                      style: AppStyles
+                                                          .getSemiBoldTextStyle(
+                                                        color:
+                                                            AppColors.baseColor,
+                                                        fontSize: 12,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Icon(
+                                                      Icons.arrow_right_alt,
+                                                      color:
+                                                          AppColors.baseColor,
+                                                    )
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+                                        // Example floating scooter image on the right (optional)
+                                      ],
                                     ),
                                   ),
 

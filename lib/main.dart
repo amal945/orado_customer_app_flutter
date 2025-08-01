@@ -15,15 +15,26 @@ import 'features/auth/provider/auth_provider.dart';
 import 'features/auth/provider/login_provider.dart';
 import 'features/home/provider/live_status_provider.dart';
 import 'features/location/provider/address_provider.dart';
+import 'features/notificaiton/notification.dart';
 import 'features/profile/provider/loyalty_provider.dart';
+import 'features/ticket/provider/ticket_provider.dart';
 import 'features/user/provider/user_provider.dart';
 import 'services/route_services.dart' as route;
 import 'utilities/utilities.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  final fcmHandler = FCMHandler();
+  await fcmHandler
+      .initialize();
 
   Olamaps.instance.initialize('iYm7HlH8BzRNDVcSlqyKf6IAgbZvU7OL9CyNwtlT');
   SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
@@ -111,6 +122,8 @@ class _MyAppState extends State<MyApp> {
                   create: (_) => LoyaltyProvider()),
               ChangeNotifierProvider<LiveStatusProvider>(
                   create: (_) => LiveStatusProvider()),
+              ChangeNotifierProvider<TicketProvider>(
+                  create: (_) => TicketProvider()),
             ],
             child: child,
           );

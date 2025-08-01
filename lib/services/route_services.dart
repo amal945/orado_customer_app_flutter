@@ -33,6 +33,9 @@ import '../features/home/models/active_order_model.dart';
 import '../features/home/presentation/live_status.dart';
 import '../features/location/presentation/address_screen.dart';
 import '../features/no_internet_page.dart';
+import '../features/ticket/presentation/create_ticket_screen.dart';
+import '../features/ticket/presentation/ticket_detail_screen.dart';
+import '../features/ticket/presentation/ticket_screen.dart';
 import 'connectivity_service.dart';
 
 import '../main.dart';
@@ -130,6 +133,31 @@ final router = GoRouter(
           pageBuilder: (context, state) =>
               getCustomTransition(state, const LoyaltyInfoScreen()),
         ),
+        GoRoute(
+          path: CreateTicketScreen.route,
+          name: CreateTicketScreen.route,
+          pageBuilder: (context, state) =>
+              getCustomTransition(state, const CreateTicketScreen()),
+        ),
+        GoRoute(
+          path: TicketScreen.route,
+          name: TicketScreen.route,
+          pageBuilder: (context, state) =>
+              getCustomTransition(state, const TicketScreen()),
+        ),
+
+        GoRoute(
+          path: TicketDetailScreen.route,
+          name: TicketDetailScreen.route,
+          pageBuilder: (context, state) {
+            final ticketId = state.extra as String;
+            return getCustomTransition(
+              state,
+              TicketDetailScreen(ticketId: ticketId,),
+            );
+          },
+        ),
+
 
         GoRoute(
           path: LiveStatusScreen.route,
@@ -148,7 +176,6 @@ final router = GoRouter(
             return getCustomTransition(state, LiveStatusScreen(data: data));
           },
         ),
-
         GoRoute(
           path: '${CouponScreen.route}/:restaurantId',
           name: CouponScreen.route,
@@ -160,7 +187,6 @@ final router = GoRouter(
             );
           },
         ),
-
         GoRoute(
           path: MapScreen.route,
           name: MapScreen.route,
