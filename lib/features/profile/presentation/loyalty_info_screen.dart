@@ -55,7 +55,8 @@ class _LoyaltyInfoScreenState extends State<LoyaltyInfoScreen> {
                 _buildLoyaltySummaryRow(provider.balance),
                 const SizedBox(height: 24),
                 Padding(
-                  padding: const EdgeInsets.only(left: 16.0,right: 16 ,bottom: 20),
+                  padding:
+                      const EdgeInsets.only(left: 16.0, right: 16, bottom: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -64,79 +65,68 @@ class _LoyaltyInfoScreenState extends State<LoyaltyInfoScreen> {
                         style: AppStyles.getBoldTextStyle(fontSize: 20),
                       ),
                       const SizedBox(height: 16),
-
                       _LoyaltyTermTile(
                         icon: Icons.info,
                         title: 'Earning Points',
                         description:
-                        'You will earn ${rules.pointsPerAmount} point for every ₹100 spent.',
+                            'You will earn ${rules.pointsPerAmount} point for every ₹100 spent.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.shopping_cart_checkout,
                         title: 'Minimum Order to Earn',
                         description:
-                        'Minimum order value to earn loyalty points is ₹${rules.minOrderAmountForEarning}.',
+                            'Minimum order value to earn loyalty points is ₹${rules.minOrderAmountForEarning}.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.attach_money,
                         title: 'Point Value',
                         description:
-                        'Each loyalty point is worth ₹${rules.valuePerPoint}.',
+                            'Each loyalty point is worth ₹${rules.valuePerPoint}.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.shopping_cart,
                         title: 'Minimum Order to Redeem',
                         description:
-                        'Minimum order amount required for redeeming points is ₹${rules.minOrderAmountForRedemption}.',
+                            'Minimum order amount required for redeeming points is ₹${rules.minOrderAmountForRedemption}.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.access_time,
                         title: 'Point Crediting',
                         description:
-                        'Points are credited 24 hours after successful delivery.',
+                            'Points are credited 24 hours after successful delivery.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.hourglass_bottom,
                         title: 'Validity',
                         description:
-                        'Loyalty points are valid for ${rules.expiryDurationDays} days from credit.',
+                            'Loyalty points are valid for ${rules.expiryDurationDays} days from credit.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.stacked_line_chart,
                         title: 'Max Points Per Order',
                         description:
-                        'You can earn a maximum of ${rules.maxEarningPoints} points per order.',
+                            'You can earn a maximum of ${rules.maxEarningPoints} points per order.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.percent,
                         title: 'Redemption Limit',
                         description:
-                        'You can redeem points up to ${rules.maxRedemptionPercent}% of the order total.',
+                            'You can redeem points up to ${rules.maxRedemptionPercent}% of the order total.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.local_offer,
                         title: 'Usage with Offers',
                         description:
-                        'Loyalty points can be used along with other discounts and offers.',
+                            'Loyalty points can be used along with other discounts and offers.',
                       ),
-
                       _LoyaltyTermTile(
                         icon: Icons.info_outline,
                         title: 'Disclaimer',
                         description:
-                        'All terms and conditions are subject to change without prior notice.',
+                            'All terms and conditions are subject to change without prior notice.',
                       ),
                     ],
                   ),
-
                 ),
               ],
             ),
@@ -148,11 +138,12 @@ class _LoyaltyInfoScreenState extends State<LoyaltyInfoScreen> {
 
   Widget _buildLoyaltySummaryRow(int balance) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: _buildSummaryCard(
+            child: _responsiveSummaryCard(
               value: "$balance",
               label: 'Available Points',
               icon: Icons.card_giftcard,
@@ -161,7 +152,7 @@ class _LoyaltyInfoScreenState extends State<LoyaltyInfoScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _buildSummaryCard(
+            child: _responsiveSummaryCard(
               value: 'Get 1 point',
               label: 'Per ₹100 spent',
               icon: Icons.trending_up,
@@ -170,7 +161,7 @@ class _LoyaltyInfoScreenState extends State<LoyaltyInfoScreen> {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _buildSummaryCard(
+            child: _responsiveSummaryCard(
               value: '₹1',
               label: 'Per point value',
               icon: Icons.attach_money,
@@ -180,6 +171,61 @@ class _LoyaltyInfoScreenState extends State<LoyaltyInfoScreen> {
         ],
       ),
     );
+  }
+
+  Widget _responsiveSummaryCard({
+    required String value,
+    required String label,
+    required IconData icon,
+    required List<Color> gradient,
+  }) {
+    return LayoutBuilder(builder: (context, constraints) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Value with flexible sizing
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: AppStyles.getBoldTextStyle(fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: AppStyles.getRegularTextStyle(
+                  fontSize: 13, color: Colors.black87),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(colors: gradient),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildSummaryCard({

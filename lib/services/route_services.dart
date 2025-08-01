@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orado_customer/features/auth/presentation/otp_screen.dart';
 import 'package:orado_customer/features/auth/presentation/otp_screen.dart';
@@ -28,6 +29,8 @@ import '../features/auth/presentation/new_password.dart';
 import '../features/auth/presentation/reset_password.dart';
 import '../features/auth/presentation/sign_up_screen.dart';
 import '../features/auth/presentation/login_with_phone_number_screen.dart';
+import '../features/home/models/active_order_model.dart';
+import '../features/home/presentation/live_status.dart';
 import '../features/location/presentation/address_screen.dart';
 import '../features/no_internet_page.dart';
 import 'connectivity_service.dart';
@@ -127,6 +130,25 @@ final router = GoRouter(
           pageBuilder: (context, state) =>
               getCustomTransition(state, const LoyaltyInfoScreen()),
         ),
+
+        GoRoute(
+          path: LiveStatusScreen.route,
+          name: LiveStatusScreen.route,
+          pageBuilder: (context, state) {
+            final data = state.extra;
+            if (data == null || data is! ActiveOrderModel) {
+              // fallback UI or error page if required data isn't provided
+              return MaterialPage(
+                child: Scaffold(
+                  appBar: AppBar(title: const Text("Error")),
+                  body: const Center(child: Text("Order data missing")),
+                ),
+              );
+            }
+            return getCustomTransition(state, LiveStatusScreen(data: data));
+          },
+        ),
+
         GoRoute(
           path: '${CouponScreen.route}/:restaurantId',
           name: CouponScreen.route,

@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/auth/provider/auth_provider.dart';
 import 'features/auth/provider/login_provider.dart';
+import 'features/home/provider/live_status_provider.dart';
 import 'features/location/provider/address_provider.dart';
 import 'features/profile/provider/loyalty_provider.dart';
 import 'features/user/provider/user_provider.dart';
@@ -108,6 +109,8 @@ class _MyAppState extends State<MyApp> {
                   create: (_) => ProfileProvider()),
               ChangeNotifierProvider<LoyaltyProvider>(
                   create: (_) => LoyaltyProvider()),
+              ChangeNotifierProvider<LiveStatusProvider>(
+                  create: (_) => LiveStatusProvider()),
             ],
             child: child,
           );

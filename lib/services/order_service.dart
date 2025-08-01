@@ -46,7 +46,7 @@ class OrderService {
       }
     } catch (e) {
       log("Exception in placeOrder: $e");
-      return null;
+      rethrow;
     }
   }
 

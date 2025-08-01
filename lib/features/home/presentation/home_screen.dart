@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:orado_customer/features/auth/presentation/get_started_screen.dart';
 import 'package:orado_customer/features/cart/provider/cart_provider.dart';
+import 'package:orado_customer/features/home/presentation/live_status.dart';
+import 'package:orado_customer/features/home/presentation/widgets/acitve_order_banner.dart';
 import 'package:orado_customer/features/home/provider/home_provider.dart';
 import 'package:orado_customer/features/location/provider/location_provider.dart';
 import 'package:orado_customer/features/merchants/presentation/merchant_detail_screen.dart';
 import 'package:orado_customer/features/user/provider/user_provider.dart';
 import 'package:orado_customer/utilities/common/scaffold_builder.dart';
+import 'package:orado_customer/utilities/placeholders.dart';
 import 'package:provider/provider.dart';
 import '../../../utilities/common/categories_section.dart';
 import '../../../utilities/common/custom_sliver_app_bar.dart';
@@ -42,15 +45,6 @@ class _HomeState extends State<Home> {
 
         await homeProvider.getHome(context);
         await userProvider.fetchFavourites(context);
-
-        homeProvider.initSocket();
-
-        // Listen for changes in liveDeliveryStatus and show bottom sheet when data arrives
-        homeProvider.addListener(() {
-          if (homeProvider.liveDeliveryStatus.isNotEmpty && mounted) {
-            showOrderStatusBottomSheet(context);
-          }
-        });
       }
     });
   }
@@ -70,112 +64,6 @@ class _HomeState extends State<Home> {
 
   int _statusIndex = 0;
   void Function(VoidCallback)? _bottomSheetSetState;
-
-  void showOrderStatusBottomSheet(BuildContext context) {
-    final homeProvider = Provider.of<HomeProvider>(context, listen: false);
-
-    // Only show if there's live delivery status data
-    if (homeProvider.liveDeliveryStatus.isNotEmpty) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) {
-          return DraggableScrollableSheet(
-            initialChildSize: 0.3,
-            minChildSize: 0.2,
-            maxChildSize: 0.4,
-            builder: (_, controller) {
-              return Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                padding: const EdgeInsets.all(24),
-                child: Consumer<HomeProvider>(
-                  builder: (context, provider, _) {
-                    final status = provider.liveDeliveryStatus['orderStatus'] ??
-                        'Waiting for update';
-                    final isConnected = provider.isSocketConnected;
-
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 50,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade400,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Live Order Status',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.local_shipping,
-                              color: Colors.blue,
-                              size: 32,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    status,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (status != 'Waiting for update') ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'ETA: $status',
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                  if (!isConnected)
-                                    const Padding(
-                                      padding: EdgeInsets.only(top: 8.0),
-                                      child: Text(
-                                        'Connecting to live updates...',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.redAccent,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              );
-            },
-          );
-        },
-      );
-    }
-  }
 
   String address = 'Fetching...';
 
@@ -239,295 +127,341 @@ class _HomeState extends State<Home> {
             ),
           );
         } else {
-          return RefreshIndicator.adaptive(
-            onRefresh: () async => provider.refresh(context),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: <Widget>[
-                CustomSliverAppBar().showSliverAppBar(context,
-                    address: context.watch<LocationProvider>().isloading
-                        ? 'Fetching...'
-                        : context
-                            .watch<LocationProvider>()
-                            .currentLocationAddress),
-                SliverList(
-                  delegate: SliverChildListDelegate(
-                    <Widget>[
-                      const SizedBox(height: 25),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 13.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            SearchField(
-                              isHomePage: true,
-                              hintText: 'Find your food',
-                              onChanged: (value) {
-                                setState(() {
-                                  _searchQuery = value;
-                                });
-                                Provider.of<HomeProvider>(context,
-                                        listen: false)
-                                    .searchRestaurants(value);
-                              },
-                            ),
-                            if (_searchQuery.isNotEmpty) ...[
-                              const SizedBox(height: 20),
-                              Align(
-                                child: Text(
-                                  '${provider.filteredRestaurantList.length} restaurants found',
-                                  style: AppStyles.getRegularTextStyle(
-                                      fontSize: 15,
-                                      color: Colors.grey.shade700),
+          return Stack(
+            children: [
+              RefreshIndicator.adaptive(
+                onRefresh: () async => provider.refresh(context),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: <Widget>[
+                    CustomSliverAppBar().showSliverAppBar(context,
+                        address: context.watch<LocationProvider>().isloading
+                            ? 'Fetching...'
+                            : context
+                                .watch<LocationProvider>()
+                                .currentLocationAddress),
+                    SliverList(
+                      delegate: SliverChildListDelegate(
+                        <Widget>[
+                          const SizedBox(height: 25),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 13.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                SearchField(
+                                  isHomePage: true,
+                                  hintText: 'Find your food',
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchQuery = value;
+                                    });
+                                    Provider.of<HomeProvider>(context,
+                                            listen: false)
+                                        .searchRestaurants(value);
+                                  },
                                 ),
-                              ),
-                              const SizedBox(height: 12),
-                              ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount:
-                                    provider.filteredRestaurantList.length,
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final data =
-                                      provider.filteredRestaurantList[index];
-                                  return GestureDetector(
-                                    onTap: () {
-                                      log('Navigating to MerchantDetailScreen from All Restaurants with Merchant ID: ${data.merchantId}');
-                                      context.pushNamed(
-                                        MerchantDetailScreen.route,
-                                        queryParameters: {
-                                          'id': data.merchantId,
-                                          // 'query': sea,
-                                        },
-                                      );
-                                    },
-                                    child: FoodTileCardLarge(
-                                      merchantId: data.merchantId,
-                                      name: data.shopName,
-                                      distance: data.distance,
-                                      image: data.image?.imageName,
-                                      productName: data.availableFoods
-                                          ?.map((food) => food.name)
-                                          .join(', '),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ] else ...[
-                              Card(
-                                color: Colors.grey.shade100,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
-                                child: Container(
-                                  height: 170,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    image: const DecorationImage(
-                                      fit: BoxFit.cover,
-                                      image:
-                                          AssetImage('assets/images/image.png'),
+                                if (_searchQuery.isNotEmpty) ...[
+                                  const SizedBox(height: 20),
+                                  Align(
+                                    child: Text(
+                                      '${provider.filteredRestaurantList.length} restaurants found',
+                                      style: AppStyles.getRegularTextStyle(
+                                          fontSize: 15,
+                                          color: Colors.grey.shade700),
                                     ),
                                   ),
-                                  width: double.infinity,
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(18.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: <Widget>[
-                                          Text(
-                                            'Free Delivery For \nNext 3 month',
-                                            style: AppStyles.getBoldTextStyle(
-                                                fontSize: 17),
-                                          ),
-                                          const SizedBox(height: 20),
-                                          Row(
-                                            children: <Widget>[
-                                              Text(
-                                                'Order Now',
-                                                style: AppStyles
-                                                    .getSemiBoldTextStyle(
-                                                        color:
-                                                            AppColors.baseColor,
-                                                        fontSize: 12),
-                                              ),
-                                              Icon(
-                                                Icons.arrow_right_alt,
-                                                color: AppColors.baseColor,
-                                              )
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 30),
-                              provider.categoriesData.isNotEmpty &&
-                                      provider.categoriesData.first.data
-                                              ?.isNotEmpty ==
-                                          true
-                                  ? CategoriesSection(
-                                      categories:
-                                          provider.categoriesData.first.data!,
-                                    )
-                                  : const SizedBox.shrink(),
-                              const SizedBox(height: 20),
-
-                              // const SizedBox(height: 40),
-                              // Text(
-                              //   'Explore',
-                              //   style: AppStyles.getMediumTextStyle(fontSize: 17),
-                              // ),
-                              // const SizedBox(height: 10),
-                              // Card(
-                              //   color: Colors.white,
-                              //   child: Stack(
-                              //     children: <Widget>[
-                              //       Align(
-                              //         child: Image.asset(
-                              //           'assets/images/Mask group.png',
-                              //           fit: BoxFit.cover,
-                              //         ),
-                              //       ),
-                              //       Padding(
-                              //         padding: const EdgeInsets.all(18.0),
-                              //         child: Column(
-                              //           crossAxisAlignment:
-                              //               CrossAxisAlignment.start,
-                              //           mainAxisAlignment:
-                              //               MainAxisAlignment.center,
-                              //           children: <Widget>[
-                              //             Text(
-                              //               'Offers',
-                              //               style: AppStyles.getBoldTextStyle(
-                              //                   fontSize: 17),
-                              //             ),
-                              //             const SizedBox(height: 20),
-                              //             Row(
-                              //               children: <Widget>[
-                              //                 Text(
-                              //                   'Order Now',
-                              //                   style: AppStyles
-                              //                       .getSemiBoldTextStyle(
-                              //                           color:
-                              //                               AppColors.baseColor,
-                              //                           fontSize: 16),
-                              //                 ),
-                              //                 Icon(
-                              //                   Icons.arrow_right_alt,
-                              //                   color: AppColors.baseColor,
-                              //                 )
-                              //               ],
-                              //             ),
-                              //           ],
-                              //         ),
-                              //       ),
-                              //     ],
-                              //   ),
-                              // ),
-                              // const SizedBox(height: 20),
-                              Text(
-                                'All Restaurants',
-                                style: AppStyles.getBoldTextStyle(
-                                  fontSize: 20,
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-
-                              Align(
-                                child: Text(
-                                  '${provider.restaurantList.length} restaurants delivering to you',
-                                  style: AppStyles.getRegularTextStyle(
-                                      fontSize: 15,
-                                      color: Colors.grey.shade700),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              ListView.builder(
-                                padding: EdgeInsets.zero,
-                                itemCount:
-                                    // provider.homeModel?.topRestaurants?.length ?? 0,
-
-                                    provider.restaurantList.length,
-                                physics: const NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemBuilder: (BuildContext context, int index) {
-                                  final data = provider.restaurantList[index];
-                                  return FoodTileCardLarge(
-                                    merchantId: data.merchantId,
-                                    name: data.shopName,
-                                    distance: data.distance,
-                                    image: data.image!.imageName,
-                                  );
-                                },
-                              ),
-
-                              const SizedBox(height: 20),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text('Recommended for you',
-                                    style: AppStyles.getBoldTextStyle(
-                                      fontSize: 20,
-                                    )),
-                              ),
-                              const SizedBox(height: 20),
-                              Visibility(
-                                visible: provider.isRecommendedAvailable,
-                                child: SizedBox(
-                                  height: 266,
-                                  child: ListView.builder(
+                                  const SizedBox(height: 12),
+                                  ListView.builder(
+                                    padding: EdgeInsets.zero,
                                     itemCount:
-                                        provider.recommendedRestaurants.length,
-                                    scrollDirection: Axis.horizontal,
+                                        provider.filteredRestaurantList.length,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
                                     shrinkWrap: true,
-                                    itemBuilder: (BuildContext c, int i) {
-                                      final data =
-                                          provider.recommendedRestaurants[i];
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      final data = provider
+                                          .filteredRestaurantList[index];
                                       return GestureDetector(
                                         onTap: () {
-                                          if (data.merchantId != null) {
-                                            context.pushNamed(
-                                              MerchantDetailScreen.route,
-                                              queryParameters: <String, String>{
-                                                'id': data.merchantId!
-                                              },
-                                            );
-                                          }
+                                          log('Navigating to MerchantDetailScreen from All Restaurants with Merchant ID: ${data.merchantId}');
+                                          context.pushNamed(
+                                            MerchantDetailScreen.route,
+                                            queryParameters: {
+                                              'id': data.merchantId,
+                                              // 'query': sea,
+                                            },
+                                          );
                                         },
-                                        child: Padding(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 10.0,
-                                          ),
-                                          child: FoodTileCardSmall(
-                                            image: data.image!.imageName,
-                                            name: data.shopName,
-                                            distance: data.distance,
-                                            time: data.deliveryTime,
-                                          ),
+                                        child: FoodTileCardLarge(
+                                          merchantId: data.merchantId,
+                                          name: data.shopName,
+                                          distance: data.distance,
+                                          image: data.image?.imageName,
+                                          productName: data.availableFoods
+                                              ?.map((food) => food.name)
+                                              .join(', '),
                                         ),
                                       );
                                     },
                                   ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
+                                ] else ...[
+                                  Card(
+                                    color: Colors.grey.shade100,
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
+                                    child: Container(
+                                      height: 170,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        image: const DecorationImage(
+                                          fit: BoxFit.cover,
+                                          image: AssetImage(
+                                              'assets/images/image.png'),
+                                        ),
+                                      ),
+                                      width: double.infinity,
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(18.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Text(
+                                                'Free Delivery For \nNext 3 month',
+                                                style:
+                                                    AppStyles.getBoldTextStyle(
+                                                        fontSize: 17),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Row(
+                                                children: <Widget>[
+                                                  Text(
+                                                    'Order Now',
+                                                    style: AppStyles
+                                                        .getSemiBoldTextStyle(
+                                                            color: AppColors
+                                                                .baseColor,
+                                                            fontSize: 12),
+                                                  ),
+                                                  Icon(
+                                                    Icons.arrow_right_alt,
+                                                    color: AppColors.baseColor,
+                                                  )
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 30),
+                                  provider.categoriesData.isNotEmpty &&
+                                          provider.categoriesData.first.data
+                                                  ?.isNotEmpty ==
+                                              true
+                                      ? CategoriesSection(
+                                          categories: provider
+                                              .categoriesData.first.data!,
+                                        )
+                                      : const SizedBox.shrink(),
+                                  const SizedBox(height: 20),
+
+                                  // const SizedBox(height: 40),
+                                  // Text(
+                                  //   'Explore',
+                                  //   style: AppStyles.getMediumTextStyle(fontSize: 17),
+                                  // ),
+                                  // const SizedBox(height: 10),
+                                  // Card(
+                                  //   color: Colors.white,
+                                  //   child: Stack(
+                                  //     children: <Widget>[
+                                  //       Align(
+                                  //         child: Image.asset(
+                                  //           'assets/images/Mask group.png',
+                                  //           fit: BoxFit.cover,
+                                  //         ),
+                                  //       ),
+                                  //       Padding(
+                                  //         padding: const EdgeInsets.all(18.0),
+                                  //         child: Column(
+                                  //           crossAxisAlignment:
+                                  //               CrossAxisAlignment.start,
+                                  //           mainAxisAlignment:
+                                  //               MainAxisAlignment.center,
+                                  //           children: <Widget>[
+                                  //             Text(
+                                  //               'Offers',
+                                  //               style: AppStyles.getBoldTextStyle(
+                                  //                   fontSize: 17),
+                                  //             ),
+                                  //             const SizedBox(height: 20),
+                                  //             Row(
+                                  //               children: <Widget>[
+                                  //                 Text(
+                                  //                   'Order Now',
+                                  //                   style: AppStyles
+                                  //                       .getSemiBoldTextStyle(
+                                  //                           color:
+                                  //                               AppColors.baseColor,
+                                  //                           fontSize: 16),
+                                  //                 ),
+                                  //                 Icon(
+                                  //                   Icons.arrow_right_alt,
+                                  //                   color: AppColors.baseColor,
+                                  //                 )
+                                  //               ],
+                                  //             ),
+                                  //           ],
+                                  //         ),
+                                  //       ),
+                                  //     ],
+                                  //   ),
+                                  // ),
+                                  // const SizedBox(height: 20),
+                                  Text(
+                                    'All Restaurants',
+                                    style: AppStyles.getBoldTextStyle(
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+
+                                  Align(
+                                    child: Text(
+                                      '${provider.restaurantList.length} restaurants delivering to you',
+                                      style: AppStyles.getRegularTextStyle(
+                                          fontSize: 15,
+                                          color: Colors.grey.shade700),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    itemCount:
+                                        // provider.homeModel?.topRestaurants?.length ?? 0,
+
+                                        provider.restaurantList.length,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    shrinkWrap: true,
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      final data =
+                                          provider.restaurantList[index];
+                                      return FoodTileCardLarge(
+                                        merchantId: data.merchantId,
+                                        name: data.shopName,
+                                        distance: data.distance,
+                                        image: data.image!.imageName,
+                                      );
+                                    },
+                                  ),
+
+                                  const SizedBox(height: 20),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text('Recommended for you',
+                                        style: AppStyles.getBoldTextStyle(
+                                          fontSize: 20,
+                                        )),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Visibility(
+                                    visible: provider.isRecommendedAvailable,
+                                    child: SizedBox(
+                                      height: 266,
+                                      child: ListView.builder(
+                                        itemCount: provider
+                                            .recommendedRestaurants.length,
+                                        scrollDirection: Axis.horizontal,
+                                        shrinkWrap: true,
+                                        itemBuilder: (BuildContext c, int i) {
+                                          final data = provider
+                                              .recommendedRestaurants[i];
+                                          return GestureDetector(
+                                            onTap: () {
+                                              if (data.merchantId != null) {
+                                                context.pushNamed(
+                                                  MerchantDetailScreen.route,
+                                                  queryParameters: <String,
+                                                      String>{
+                                                    'id': data.merchantId!
+                                                  },
+                                                );
+                                              }
+                                            },
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 10.0,
+                                              ),
+                                              child: FoodTileCardSmall(
+                                                image: data.image!.imageName,
+                                                name: data.shopName,
+                                                distance: data.distance,
+                                                time: data.deliveryTime,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 120),
+                        ],
                       ),
-                      const SizedBox(height: 120),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              // Active order banner pinned above bottom nav
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 90,
+                // a bit above the bottom nav; adjust if your nav bar is taller
+                child: Consumer<HomeProvider>(
+                  builder: (context, home, _) {
+                    // Replace the following with real check for active order
+                    final hasActiveOrder = home.activeOrder != null;
+                    if (!hasActiveOrder) return const SizedBox.shrink();
+
+                    final data = home.activeOrder;
+                    // Extract the info; adjust to your real model fields
+                    final restaurantName = data?.restaurant?.name ?? "";
+                    final itemName = '${data?.orderItems?.length ?? 1} item';
+                    final imageUrl = data?.restaurant?.image ??
+                        PlaceHolders.restaurantImage; // optional
+
+                    return ActiveOrderBanner(
+                      restaurantName: restaurantName,
+                      itemPreview: itemName,
+                      imageUrl: imageUrl,
+                      onTap: () {
+                        context.pushNamed(LiveStatusScreen.route,extra: data);
+                      },
+                      onView: () {
+                        context.pushNamed(LiveStatusScreen.route,extra: data);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         }
       }),

@@ -37,6 +37,8 @@ class CartProvider extends ChangeNotifier {
 
   bool useLoyaltyPoint = false;
 
+  int loyaltyPointsToRedeem = 0;
+
   final TextEditingController cookingInstruction = TextEditingController();
   final TextEditingController deliveryInstruction = TextEditingController();
   final TextEditingController receiverNameController = TextEditingController();
@@ -88,9 +90,60 @@ class CartProvider extends ChangeNotifier {
     putLoading(false);
   }
 
-  toggleLoyaltyPoint() {
+  void toggleLoyaltyPoint() {
     useLoyaltyPoint = !useLoyaltyPoint;
+    if (!useLoyaltyPoint) {
+      // reset if disabling
+      loyaltyPointsToRedeem = 0;
+      loyaltyPointController.clear();
+    }
     notifyListeners();
+  }
+
+  Future<void> applyLoyaltyPoints() async {
+    final ruleLocal = rule;
+    if (ruleLocal == null) return;
+
+    final subtotal = double.tryParse(priceSummary?.data?.total ?? '0') ?? 0;
+    final minPoints = ruleLocal.minPointsForRedemption ?? 0;
+    final maxPercent = ruleLocal.maxRedemptionPercent ?? 0;
+    final valuePerPoint = ruleLocal.valuePerPoint ?? 1;
+
+    final maxPointsByPercent =
+        ((subtotal * maxPercent) / 100) ~/ valuePerPoint; // integer division
+    final maxRedeemable =
+        balance < maxPointsByPercent ? balance : maxPointsByPercent;
+
+    int enteredPoints = int.tryParse(loyaltyPointController.text.trim()) ?? 0;
+
+    final isValidEntry =
+        enteredPoints >= minPoints && enteredPoints <= maxRedeemable;
+    final appliedPoints = isValidEntry
+        ? enteredPoints
+        : (enteredPoints > maxRedeemable ? maxRedeemable : 0);
+
+    loyaltyPointsToRedeem = appliedPoints;
+
+    // if nothing to redeem, clear the field to avoid sending stale data
+    if (loyaltyPointsToRedeem == 0) {
+      loyaltyPointController.text = '';
+    } else {
+      // keep the controller in sync
+      loyaltyPointController.text = loyaltyPointsToRedeem.toString();
+    }
+
+    notifyListeners();
+
+    // reload price summary only if prerequisites are present
+    if (selectedLatitude != null &&
+        selectedLongitude != null &&
+        cartData?.cartId != null) {
+      await loadPriceSummary(
+        longitude: selectedLongitude!,
+        latitude: selectedLatitude!,
+        cartId: cartData!.cartId!,
+      );
+    }
   }
 
   Future<void> setCouponCode({required String code}) async {
@@ -264,6 +317,8 @@ class CartProvider extends ChangeNotifier {
     required String latitude,
     required String cartId,
   }) async {
+    log("Load Price Summary Called");
+
     putLoading(true);
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -356,7 +411,7 @@ class CartProvider extends ChangeNotifier {
       }
     } catch (e) {
       showSnackBar(context,
-          message: "$e", backgroundColor: AppColors.baseColor);
+          message: "Failed to Order", backgroundColor: AppColors.baseColor);
     }
     getAllCart(context);
   }
@@ -417,7 +472,7 @@ class CartProvider extends ChangeNotifier {
       }
     } catch (e) {
       showSnackBar(context,
-          message: "$e", backgroundColor: AppColors.baseColor);
+          message: "Failed to Order", backgroundColor: AppColors.baseColor);
     } finally {
       putPlaceOrderLoading(false);
     }

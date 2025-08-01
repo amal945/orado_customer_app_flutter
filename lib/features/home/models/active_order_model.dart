@@ -2,66 +2,74 @@ class ActiveOrderModel {
   String? sId;
   Customer? customer;
   Restaurant? restaurant;
-  List<OrderItems>? orderItems;
+  List<OrderItem>? orderItems;
   String? orderStatus;
   AssignedAgent? assignedAgent;
   int? isAgentAssigned;
   int? subtotal;
-  String? orderTime;
+  DateTime? orderTime;
+  Location? deliveryLocation;
 
-  ActiveOrderModel(
-      {this.sId,
-        this.customer,
-        this.restaurant,
-        this.orderItems,
-        this.orderStatus,
-        this.assignedAgent,
-        this.isAgentAssigned,
-        this.subtotal,
-        this.orderTime});
+  ActiveOrderModel({
+    this.sId,
+    this.customer,
+    this.restaurant,
+    this.orderItems,
+    this.orderStatus,
+    this.assignedAgent,
+    this.isAgentAssigned,
+    this.subtotal,
+    this.orderTime,
+    this.deliveryLocation,
+  });
 
-  ActiveOrderModel.fromJson(Map<String, dynamic> json) {
-    sId = json['_id'];
-    customer = json['customer'] != null
-        ? new Customer.fromJson(json['customer'])
-        : null;
-    restaurant = json['restaurant'] != null
-        ? new Restaurant.fromJson(json['restaurant'])
-        : null;
-    if (json['orderItems'] != null) {
-      orderItems = <OrderItems>[];
-      json['orderItems'].forEach((v) {
-        orderItems!.add(new OrderItems.fromJson(v));
-      });
-    }
-    orderStatus = json['orderStatus'];
-    assignedAgent = json['assignedAgent'] != null
-        ? new AssignedAgent.fromJson(json['assignedAgent'])
-        : null;
-    isAgentAssigned = json['isAgentAssigned'];
-    subtotal = json['subtotal'];
-    orderTime = json['orderTime'];
+  factory ActiveOrderModel.fromJson(Map<String, dynamic> json) {
+    return ActiveOrderModel(
+      sId: json['_id'] as String?,
+      customer: json['customer'] != null
+          ? Customer.fromJson(json['customer'] as Map<String, dynamic>)
+          : null,
+      restaurant: json['restaurant'] != null
+          ? Restaurant.fromJson(json['restaurant'] as Map<String, dynamic>)
+          : null,
+      orderItems: (json['orderItems'] as List<dynamic>?)
+          ?.map((e) => OrderItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      orderStatus: json['orderStatus'] as String?,
+      assignedAgent: json['assignedAgent'] != null
+          ? AssignedAgent.fromJson(json['assignedAgent'] as Map<String, dynamic>)
+          : null,
+      isAgentAssigned: json['isAgentAssigned'] is int
+          ? json['isAgentAssigned'] as int
+          : int.tryParse(json['isAgentAssigned']?.toString() ?? ''),
+      subtotal: json['subtotal'] is int
+          ? json['subtotal'] as int
+          : int.tryParse(json['subtotal']?.toString() ?? ''),
+      orderTime: json['orderTime'] != null
+          ? DateTime.tryParse(json['orderTime'] as String)
+          : null,
+      deliveryLocation: json['deliveryLocation'] != null
+          ? Location.fromJson(json['deliveryLocation'] as Map<String, dynamic>)
+          : null,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['_id'] = this.sId;
-    if (this.customer != null) {
-      data['customer'] = this.customer!.toJson();
+    final data = <String, dynamic>{};
+    data['_id'] = sId;
+    if (customer != null) data['customer'] = customer!.toJson();
+    if (restaurant != null) data['restaurant'] = restaurant!.toJson();
+    if (orderItems != null) {
+      data['orderItems'] = orderItems!.map((e) => e.toJson()).toList();
     }
-    if (this.restaurant != null) {
-      data['restaurant'] = this.restaurant!.toJson();
+    data['orderStatus'] = orderStatus;
+    if (assignedAgent != null) data['assignedAgent'] = assignedAgent!.toJson();
+    data['isAgentAssigned'] = isAgentAssigned;
+    data['subtotal'] = subtotal;
+    if (orderTime != null) data['orderTime'] = orderTime!.toIso8601String();
+    if (deliveryLocation != null) {
+      data['deliveryLocation'] = deliveryLocation!.toJson();
     }
-    if (this.orderItems != null) {
-      data['orderItems'] = this.orderItems!.map((v) => v.toJson()).toList();
-    }
-    data['orderStatus'] = this.orderStatus;
-    if (this.assignedAgent != null) {
-      data['assignedAgent'] = this.assignedAgent!.toJson();
-    }
-    data['isAgentAssigned'] = this.isAgentAssigned;
-    data['subtotal'] = this.subtotal;
-    data['orderTime'] = this.orderTime;
     return data;
   }
 }
@@ -74,44 +82,55 @@ class Customer {
 
   Customer({this.sId, this.name, this.email, this.phone});
 
-  Customer.fromJson(Map<String, dynamic> json) {
-    sId = json['_id'];
-    name = json['name'];
-    email = json['email'];
-    phone = json['phone'];
+  factory Customer.fromJson(Map<String, dynamic> json) {
+    return Customer(
+      sId: json['_id'] as String?,
+      name: json['name'] as String?,
+      email: json['email'] as String?,
+      phone: json['phone'] as String?,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['_id'] = this.sId;
-    data['name'] = this.name;
-    data['email'] = this.email;
-    data['phone'] = this.phone;
-    return data;
+    return {
+      '_id': sId,
+      'name': name,
+      'email': email,
+      'phone': phone,
+    };
   }
 }
 
 class Restaurant {
   String? id;
   String? name;
+  String? image;
   Address? address;
+  Location? location;
 
-  Restaurant({this.id, this.name, this.address});
+  Restaurant({this.id, this.name, this.image, this.address, this.location});
 
-  Restaurant.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    address =
-    json['address'] != null ? new Address.fromJson(json['address']) : null;
+  factory Restaurant.fromJson(Map<String, dynamic> json) {
+    return Restaurant(
+      id: json['id'] as String?,
+      name: json['name'] as String?,
+      image: json['image'] as String?,
+      address: json['address'] != null
+          ? Address.fromJson(json['address'] as Map<String, dynamic>)
+          : null,
+      location: json['location'] != null
+          ? Location.fromJson(json['location'] as Map<String, dynamic>)
+          : null,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    if (this.address != null) {
-      data['address'] = this.address!.toJson();
-    }
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['image'] = image;
+    if (address != null) data['address'] = address!.toJson();
+    if (location != null) data['location'] = location!.toJson();
     return data;
   }
 }
@@ -124,48 +143,97 @@ class Address {
 
   Address({this.street, this.city, this.state, this.zip});
 
-  Address.fromJson(Map<String, dynamic> json) {
-    street = json['street'];
-    city = json['city'];
-    state = json['state'];
-    zip = json['zip'];
+  factory Address.fromJson(Map<String, dynamic> json) {
+    return Address(
+      street: json['street'] as String?,
+      city: json['city'] as String?,
+      state: json['state'] as String?,
+      zip: json['zip'] as String?,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['street'] = this.street;
-    data['city'] = this.city;
-    data['state'] = this.state;
-    data['zip'] = this.zip;
-    return data;
+    return {
+      'street': street,
+      'city': city,
+      'state': state,
+      'zip': zip,
+    };
   }
 }
 
-class OrderItems {
+class Location {
+  // stored as string to accommodate int/double/string from backend
+  String? latitude;
+  String? longitude;
+
+  Location({this.latitude, this.longitude});
+
+  factory Location.fromJson(Map<String, dynamic> json) {
+    return Location(
+      latitude: json['latitude']?.toString(),
+      longitude: json['longitude']?.toString(),
+    );
+  }
+
+  double? get latitudeAsDouble => latitude != null ? double.tryParse(latitude!) : null;
+  double? get longitudeAsDouble => longitude != null ? double.tryParse(longitude!) : null;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
+}
+
+class OrderItem {
   String? productId;
   int? quantity;
   int? price;
   String? name;
   String? sId;
+  int? totalPrice;
+  String? image;
 
-  OrderItems({this.productId, this.quantity, this.price, this.name, this.sId});
+  OrderItem({
+    this.productId,
+    this.quantity,
+    this.price,
+    this.name,
+    this.sId,
+    this.totalPrice,
+    this.image,
+  });
 
-  OrderItems.fromJson(Map<String, dynamic> json) {
-    productId = json['productId'];
-    quantity = json['quantity'];
-    price = json['price'];
-    name = json['name'];
-    sId = json['_id'];
+  factory OrderItem.fromJson(Map<String, dynamic> json) {
+    return OrderItem(
+      productId: json['productId'] as String?,
+      quantity: json['quantity'] is int
+          ? json['quantity'] as int
+          : int.tryParse(json['quantity']?.toString() ?? ''),
+      price: json['price'] is int
+          ? json['price'] as int
+          : int.tryParse(json['price']?.toString() ?? ''),
+      name: json['name'] as String?,
+      sId: json['_id'] as String?,
+      totalPrice: json['totalPrice'] is int
+          ? json['totalPrice'] as int
+          : int.tryParse(json['totalPrice']?.toString() ?? ''),
+      image: json['image'] as String?,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['productId'] = this.productId;
-    data['quantity'] = this.quantity;
-    data['price'] = this.price;
-    data['name'] = this.name;
-    data['_id'] = this.sId;
-    return data;
+    return {
+      'productId': productId,
+      'quantity': quantity,
+      'price': price,
+      'name': name,
+      '_id': sId,
+      'totalPrice': totalPrice,
+      'image': image,
+    };
   }
 }
 
@@ -176,17 +244,19 @@ class AssignedAgent {
 
   AssignedAgent({this.id, this.fullName, this.phoneNumber});
 
-  AssignedAgent.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    fullName = json['fullName'];
-    phoneNumber = json['phoneNumber'];
+  factory AssignedAgent.fromJson(Map<String, dynamic> json) {
+    return AssignedAgent(
+      id: json['id'] as String?,
+      fullName: json['fullName'] as String?,
+      phoneNumber: json['phoneNumber'] as String?,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['fullName'] = this.fullName;
-    data['phoneNumber'] = this.phoneNumber;
-    return data;
+    return {
+      'id': id,
+      'fullName': fullName,
+      'phoneNumber': phoneNumber,
+    };
   }
 }

@@ -141,19 +141,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   trailing: Icon(Icons.arrow_forward_ios,
                       color: AppColors.baseColor, size: 16),
                 ),
-                const Divider(height: 1),
-                ListTile(
-                  minVerticalPadding: 20,
-                  onTap: () {
-
-                  },
-                  leading: Icon(Icons.support_agent_outlined,
-                      color: AppColors.baseColor),
-                  title: Text('Raise a Ticket',
-                      style: AppStyles.getBoldTextStyle(fontSize: 20)),
-                  trailing: Icon(Icons.arrow_forward_ios,
-                      color: AppColors.baseColor, size: 16),
-                ),
+                // const Divider(height: 1),
+                // ListTile(
+                //   minVerticalPadding: 20,
+                //   onTap: () {
+                //
+                //   },
+                //   leading: Icon(Icons.support_agent_outlined,
+                //       color: AppColors.baseColor),
+                //   title: Text('Raise a Ticket',
+                //       style: AppStyles.getBoldTextStyle(fontSize: 20)),
+                //   trailing: Icon(Icons.arrow_forward_ios,
+                //       color: AppColors.baseColor, size: 16),
+                // ),
                 const Divider(height: 1),
                 ListTile(
                   minVerticalPadding: 20,
