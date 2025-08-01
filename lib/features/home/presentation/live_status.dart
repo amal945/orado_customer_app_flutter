@@ -87,6 +87,7 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final liveProvider = context.read<LiveStatusProvider>();
       liveProvider.initSocket();
+      liveProvider.initialize(widget.data);
       _initializeData();
       liveProvider.addListener(_onProviderUpdate);
     });
@@ -120,7 +121,6 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
     // _deliveryLocation ??= const LatLng(12.9666, 77.6000); // Nearby
   }
 
-
   void _onProviderUpdate() {
     final liveProvider = context.read<LiveStatusProvider>();
     final agentLoc = liveProvider.agentLocation;
@@ -152,7 +152,7 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
             height: 36,
             decoration: BoxDecoration(
               color:
-              completed ? stage.color.withOpacity(0.2) : Colors.grey[200],
+                  completed ? stage.color.withOpacity(0.2) : Colors.grey[200],
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -223,7 +223,7 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
           title: Text(
             "Live Order Status",
             style:
-            AppStyles.getBoldTextStyle(fontSize: 14, color: Colors.white),
+                AppStyles.getBoldTextStyle(fontSize: 14, color: Colors.white),
           ),
           backgroundColor: AppColors.baseColor,
           foregroundColor: Colors.white,
@@ -248,15 +248,15 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
               children: [
                 SizedBox(
                   height: 300,
-                  child: _restaurantLocation == null ||
-                      _deliveryLocation == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : MapView(
-                    restaurantLocation: _restaurantLocation!,
-                    deliveryLocation: _deliveryLocation!,
-                    agentLocation: _currentAgentLocation,
-                    mapStyleAsset: 'assets/map_style.json',
-                  ),
+                  child:
+                      _restaurantLocation == null || _deliveryLocation == null
+                          ? const Center(child: CircularProgressIndicator())
+                          : MapView(
+                              restaurantLocation: _restaurantLocation!,
+                              deliveryLocation: _deliveryLocation!,
+                              agentLocation: _currentAgentLocation,
+                              mapStyleAsset: 'assets/map_style.json',
+                            ),
                 ),
                 const SizedBox(height: 12),
                 Padding(
@@ -288,7 +288,7 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
                 if (liveProvider.latestUpdate != null)
                   Padding(
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -349,7 +349,7 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
                   child: Column(
                     children: List.generate(
                       dummyStages.length,
-                          (i) => _buildStageTile(i, completed: i <= stageIndex),
+                      (i) => _buildStageTile(i, completed: i <= stageIndex),
                     ),
                   ),
                 ),

@@ -452,10 +452,10 @@ class _HomeState extends State<Home> {
                       itemPreview: itemName,
                       imageUrl: imageUrl,
                       onTap: () {
-                        context.pushNamed(LiveStatusScreen.route,extra: data);
+                        context.pushNamed(LiveStatusScreen.route, extra: data);
                       },
                       onView: () {
-                        context.pushNamed(LiveStatusScreen.route,extra: data);
+                        context.pushNamed(LiveStatusScreen.route, extra: data);
                       },
                     );
                   },

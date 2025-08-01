@@ -67,7 +67,7 @@ class CustomPastOrder extends StatelessWidget {
                     : "",
                 style: AppStyles.getMediumTextStyle(fontSize: 14)),
             const SizedBox(height: 6),
-            Text(data.orderTime ?? "",
+            Text("${data.orderTime} ${data.orderDate}",
                 style: AppStyles.getMediumTextStyle(
                     fontSize: 12, color: Colors.grey[600])),
             data.unavailableProducts != null &&

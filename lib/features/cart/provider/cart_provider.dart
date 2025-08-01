@@ -25,6 +25,8 @@ class CartProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool _isOrderPlacing = false;
 
+  bool _heavyLoading = false;
+
   List<Products> _cartItems = [];
   Data? _cartData;
   OrderPriceSummaryModel? priceSummary;
@@ -52,7 +54,11 @@ class CartProvider extends ChangeNotifier {
   String receiverName = "", receiverPhone = "", restaurantId = "";
   List<Addresses> addresses = [];
 
+
+
   bool get isLoading => _isLoading;
+
+  bool get heavyLoading => _heavyLoading;
 
   bool get isOrderPlacing => _isOrderPlacing;
 
@@ -248,14 +254,19 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void putHeavyLoading(bool value){
+    _heavyLoading = value;
+    notifyListeners();
+  }
+
   void putPlaceOrderLoading(bool value) {
-    _isOrderPlacing = value;
+    _heavyLoading = value;
     notifyListeners();
   }
 
   /// ---- Cart Handling ----
   Future<void> getAllCart(BuildContext context) async {
-    putLoading(true);
+    putHeavyLoading(true);
     try {
       await fetchBalance();
       await getRules();
@@ -280,7 +291,7 @@ class CartProvider extends ChangeNotifier {
     } catch (e) {
       log("Error fetching cart: $e");
     } finally {
-      putLoading(false);
+      putHeavyLoading(false);
     }
   }
 

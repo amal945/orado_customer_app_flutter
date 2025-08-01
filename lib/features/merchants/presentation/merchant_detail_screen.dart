@@ -38,12 +38,14 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final merchantProvider = context.read<MerchantProvider>();
       await merchantProvider.getMerchantDetails(
         restaurantId: widget.id!,
         context: context,
       );
+
       await merchantProvider.getMenu(restaurantId: widget.id!);
       if (widget.query != null && widget.query!.isNotEmpty) {
         Future.microtask(() {
@@ -461,14 +463,20 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
       ),
       bottomNavigationBar: Consumer<CartProvider>(
         builder: (context, cartProvider, child) {
-          final int totalItems = cartProvider.cartItems.fold(
+          // Filter cart items to only those whose product.restaurantId matches the current restaurant
+          final filteredItems = cartProvider.cartItems.where((item) {
+            return item.restaurantId != null && item.restaurantId == widget.id;
+          });
+
+          final int totalItems = filteredItems.fold<int>(
             0,
-            (sum, item) => sum + (item.quantity ?? 0),
+                (sum, item) => sum + (item.quantity ?? 0),
           );
 
+
+          // If you still want to ensure the cart's restaurantId matches as extra guard:
           final bool isSameRestaurant = cartProvider.restaurantId == widget.id;
 
-          // Hide the bar if no items OR restaurant doesn't match
           if (totalItems == 0 || !isSameRestaurant) {
             return const SizedBox.shrink();
           }

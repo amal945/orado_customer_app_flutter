@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../../location/provider/location_provider.dart';
+import '../models/active_order_model.dart';
 import '../models/live_order_status_update_model.dart';
 import '../models/agent_assigned_model.dart';
 import '../models/agent_location_model.dart';
@@ -19,11 +20,34 @@ class LiveStatusProvider extends ChangeNotifier {
   AgentLocation? _agentLocation;
 
   Map<String, dynamic> get liveDeliveryStatus => _liveDeliveryStatus;
+
   LiveOrderStatusUpdate? get latestUpdate => _latestUpdate;
+
   int get currentStageIndex => _currentStageIndex;
+
   AgentAssigned? get assignedAgent => _assignedAgent;
+
   AgentLocation? get agentLocation => _agentLocation;
+
   bool get isSocketConnected => _isSocketConnected;
+
+  void initialize(ActiveOrderModel data) {
+    _currentStageIndex = _mapStatusToStage(data.orderStatus!);
+    setAssignedAgent(AgentAssigned(
+      orderId: data.sId ?? "",
+      agentId: data.assignedAgent?.id ?? "",
+      fullName: data.assignedAgent?.fullName ?? "",
+      phoneNumber: data.assignedAgent?.phoneNumber ?? "",
+    ));
+  }
+
+
+  // add inside LiveStatusProvider
+  void setAssignedAgent(AgentAssigned? agent) {
+    _assignedAgent = agent;
+    notifyListeners();
+  }
+
 
   void initSocket({String userType = "user"}) async {
     try {

@@ -90,7 +90,7 @@ class _CartScreenState extends State<CartScreen> {
               cartProvider,
               _,
             ) {
-              if (cartProvider.isOrderPlacing) {
+              if (cartProvider.isOrderPlacing || cartProvider.heavyLoading) {
                 return BuildLoadingWidget(
                     withCenter: true, color: AppColors.baseColor);
               }
