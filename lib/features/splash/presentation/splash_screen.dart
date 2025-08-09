@@ -24,13 +24,25 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
 
+    // WidgetsBinding.instance.addPostFrameCallback((_) async {
+    //   if (mounted) {
+    //     final provider = Provider.of<SplashProvider>(context);
+    //
+    //   }
+    // });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SplashProvider>(context);
-    provider.getData(context);
+    final provider = context.read<SplashProvider>();
+    context.read<SplashProvider>().getData(context);
     return Scaffold(
       backgroundColor: AppColors.baseColor,
       body: Column(

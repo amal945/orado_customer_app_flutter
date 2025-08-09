@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class CouponResponseModel {
   List<Coupons>? coupon;
 
@@ -104,3 +106,33 @@ class Coupons {
     return data;
   }
 }
+
+extension CouponFormatting on Coupons {
+  /// Parses the raw discountType string into a normalized form.
+  DiscountType? get _parsedType {
+    final dt = discountType?.toLowerCase();
+    if (dt == 'percentage') return DiscountType.percentage;
+    if (dt == 'fixed') return DiscountType.fixed;
+    return null;
+  }
+
+  String get formattedDiscount {
+    if (discountValue == null) return '';
+    final type = _parsedType;
+    if (type == DiscountType.percentage) {
+      return '${discountValue}%';
+    } else if (type == DiscountType.fixed) {
+      return '₹$discountValue';
+    } else {
+      return '${discountValue}';
+    }
+  }
+
+  IconData get discountIcon {
+    final type = _parsedType;
+    if (type == DiscountType.percentage) return Icons.percent;
+    return Icons.currency_rupee;
+  }
+}
+
+enum DiscountType { fixed, percentage }

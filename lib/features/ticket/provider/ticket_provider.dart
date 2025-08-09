@@ -2,7 +2,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:orado_customer/features/ticket/model/ticket_detail_model.dart';
-import 'package:orado_customer/features/ticket/model/tickets_model.dart' hide Replies;
+import 'package:orado_customer/features/ticket/model/tickets_model.dart'
+    hide Replies;
 import 'package:orado_customer/services/ticket_services.dart';
 import 'package:orado_customer/utilities/utilities.dart';
 
@@ -262,7 +263,8 @@ class TicketProvider extends ChangeNotifier {
     putLoading(false);
   }
 
-  Future<void> sendTicketReply({required BuildContext context, required String ticketId}) async {
+  Future<void> sendTicketReply(
+      {required BuildContext context, required String ticketId}) async {
     putLoading(true);
     if (replyController.text.trim().isEmpty) {
       showSnackBar(context,
@@ -277,6 +279,7 @@ class TicketProvider extends ChangeNotifier {
           reply: reply, ticketId: ticketId);
 
       if (response != null) {
+        replyController.text = "";
         getTicketDetails(ticketId: ticketId);
       }
     } catch (e) {

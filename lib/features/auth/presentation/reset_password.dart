@@ -107,6 +107,8 @@ class ResetPasswordScreen extends StatelessWidget {
                                 //
                                 //   return null;
                                 // },
+                                validator: (String? text) =>
+                                    AppStrings.validateEmail(text),
                                 controller: provider.emailController,
                                 fillColor: AppColors.greycolor,
                                 border: OutlineInputBorder(
@@ -119,6 +121,7 @@ class ResetPasswordScreen extends StatelessWidget {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.baseColor,
                                   foregroundColor: AppColors.baseColor,
+
                                   minimumSize: Size(
                                       MediaQuery.of(context).size.width, 55),
                                   shape: RoundedRectangleBorder(

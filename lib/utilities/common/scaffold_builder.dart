@@ -19,10 +19,19 @@ class ScaffoldBuilder extends StatefulWidget {
   @override
   State<ScaffoldBuilder> createState() => _ScaffoldBuilderState();
 }
-
 class _ScaffoldBuilderState extends State<ScaffoldBuilder> {
   @override
   Widget build(BuildContext context) {
+    final bool hasManualNavBar = MediaQuery.of(context).viewPadding.bottom > 0;
+
+    Widget content = widget.body;
+    if (hasManualNavBar) {
+      content = SafeArea(
+        bottom: false, // still false if you handle it in CustomBottomNavBar
+        child: widget.body,
+      );
+    }
+
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (context.canPop()) {
@@ -31,15 +40,13 @@ class _ScaffoldBuilderState extends State<ScaffoldBuilder> {
           context.goNamed(Home.route);
         }
       },
-      child: SafeArea(
-        child: Scaffold(
-          appBar: widget.appBar,
-          extendBody: true,
-          extendBodyBehindAppBar: true,
-          backgroundColor: Colors.white,
-          body: widget.body,
-          bottomNavigationBar: CustomBottomNavBar(currentRoute: widget.route),
-        ),
+      child: Scaffold(
+        appBar: widget.appBar,
+        extendBody: true,
+        extendBodyBehindAppBar: true,
+        backgroundColor: Colors.white,
+        body: content,
+        bottomNavigationBar: CustomBottomNavBar(currentRoute: widget.route),
       ),
     );
   }

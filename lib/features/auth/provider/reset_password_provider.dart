@@ -33,6 +33,15 @@ class ResetPasswordProvider extends ChangeNotifier {
   Future<void> sendOtp(BuildContext context) async {
     toggleLoading();
     if (!resetPasswordFormKey.currentState!.validate()) {
+      toggleLoading();
+      return;
+    }
+
+    if (emailController.text.trim().isEmpty) {
+      showSnackBar(context,
+          message: "Email cannot be empty", backgroundColor: Colors.red);
+
+      toggleLoading();
       return;
     }
 
@@ -68,7 +77,8 @@ class ResetPasswordProvider extends ChangeNotifier {
     }
 
     try {
-      final response = await AuthService.verifyOtpPassword(email: email, otp: otp);
+      final response =
+          await AuthService.verifyOtpPassword(email: email, otp: otp);
 
       if (response.messageType == "success") {
         context.goNamed(NewPasswordScreen.route);
@@ -105,8 +115,8 @@ class ResetPasswordProvider extends ChangeNotifier {
     final email = emailController.text.trim();
 
     try {
-      final response =
-          await AuthService.resetPasswordEmail(password: password, email: email);
+      final response = await AuthService.resetPasswordEmail(
+          password: password, email: email);
 
       if (response.messageType != null && response.messageType == "success") {
         context.goNamed(LoginScreen.route);

@@ -33,21 +33,22 @@ class LiveStatusProvider extends ChangeNotifier {
 
   void initialize(ActiveOrderModel data) {
     _currentStageIndex = _mapStatusToStage(data.orderStatus!);
-    setAssignedAgent(AgentAssigned(
-      orderId: data.sId ?? "",
-      agentId: data.assignedAgent?.id ?? "",
-      fullName: data.assignedAgent?.fullName ?? "",
-      phoneNumber: data.assignedAgent?.phoneNumber ?? "",
-    ));
-  }
 
+    if (data.isAgentAssigned == 1) {
+      setAssignedAgent(AgentAssigned(
+        orderId: data.sId ?? "",
+        agentId: data.assignedAgent?.id ?? "",
+        fullName: data.assignedAgent?.fullName ?? "",
+        phoneNumber: data.assignedAgent?.phoneNumber ?? "",
+      ));
+    }
+  }
 
   // add inside LiveStatusProvider
   void setAssignedAgent(AgentAssigned? agent) {
     _assignedAgent = agent;
     notifyListeners();
   }
-
 
   void initSocket({String userType = "user"}) async {
     try {

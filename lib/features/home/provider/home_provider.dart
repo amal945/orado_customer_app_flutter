@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -139,7 +138,6 @@ class HomeProvider extends ChangeNotifier {
 
   Future<void> _fetchAllData(String latitude, String longitude,
       {bool forceReload = false}) async {
-
     await getAllActiveOrder();
 
     if (categoriesData.isEmpty || forceReload)
@@ -148,7 +146,6 @@ class HomeProvider extends ChangeNotifier {
       await _fetchRestaurants(latitude, longitude);
     if (recommendedRestaurants.isEmpty || forceReload)
       await _fetchRecommendedRestaurants(latitude, longitude);
-
   }
 
   Future<void> refresh(BuildContext context) async {

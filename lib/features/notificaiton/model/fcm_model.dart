@@ -9,7 +9,7 @@ class FCMTokenController {
     required String fcmToken,
   }) async {
     // Create the model
-    return FCMTokenService.saveFCMToken(token: fcmToken);
+    return await FCMTokenService.saveFCMToken(token: fcmToken);
   }
 }
 

@@ -10,7 +10,7 @@
 
 
     <application
-        android:label="orado_customer"
+        android:label="Orado"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -398,12 +398,15 @@ class _HomeState extends State<Home> {
                                   ),
 
                                   const SizedBox(height: 20),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text('Recommended for you',
-                                        style: AppStyles.getBoldTextStyle(
-                                          fontSize: 20,
-                                        )),
+                                  Visibility(
+                                    visible: provider.isRecommendedAvailable,
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text('Recommended for you',
+                                          style: AppStyles.getBoldTextStyle(
+                                            fontSize: 20,
+                                          )),
+                                    ),
                                   ),
                                   const SizedBox(height: 20),
                                   Visibility(
@@ -450,7 +453,7 @@ class _HomeState extends State<Home> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 120),
+                          const SizedBox(height: 180),
                         ],
                       ),
                     ),

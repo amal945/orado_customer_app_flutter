@@ -1,16 +1,16 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:orado_customer/services/cart_services.dart'; // Ensure this path is correct
+import 'package:orado_customer/services/order_service.dart';
+import 'package:orado_customer/services/profile_services.dart';
+import 'package:orado_customer/utilities/utilities.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/address_services.dart';
-import '../../../services/cart_services.dart';
 import '../../../services/coupon_services.dart';
 import '../../../services/loyalty_services.dart';
-import '../../../services/order_service.dart';
 import '../../../services/price_summary_service.dart';
-import '../../../services/profile_services.dart';
-import '../../../utilities/utilities.dart';
 import '../../../utilities/debouncer.dart';
 import '../../home/presentation/home_screen.dart';
 import '../../location/models/address_response_model.dart';
@@ -19,25 +19,29 @@ import '../../profile/model/loyalty_rules_model.dart';
 import '../models/cart_model.dart';
 import '../models/coupons_response_model.dart';
 import '../models/order_summary_model.dart' hide Data;
-import 'package:flutter/foundation.dart';
-
 import '../presentation/payment_gateway.dart';
 
 class CartProvider extends ChangeNotifier {
   bool _isLoading = false;
-  bool _isOrderPlacing = false;
-  bool _isVerifyingPayment = false;
+
   bool _heavyLoading = false;
+
+  bool _isCouponLoading = false;
+
+  bool _isApplyingCoupon = false;
 
   List<Products> _cartItems = [];
   Data? _cartData;
   OrderPriceSummaryModel? priceSummary;
 
   bool isDeliverable = true;
+
   String deliveryErrorMessage = "";
 
   String selectedCouponCode = "";
+
   bool useLoyaltyPoint = false;
+
   int loyaltyPointsToRedeem = 0;
 
   final TextEditingController cookingInstruction = TextEditingController();
@@ -45,6 +49,7 @@ class CartProvider extends ChangeNotifier {
   final TextEditingController receiverNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController loyaltyPointController = TextEditingController();
+  final TextEditingController couponController = TextEditingController();
 
   final _debouncers = <String, Debouncer>{};
   final _priceService = OrderPriceSummaryService();
@@ -53,44 +58,46 @@ class CartProvider extends ChangeNotifier {
   String receiverName = "", receiverPhone = "", restaurantId = "";
   List<Addresses> addresses = [];
 
-  List<Coupons> coupons = [];
-  Rules? rule;
-  int balance = 0;
-
-  // getters
   bool get isLoading => _isLoading;
+
   bool get heavyLoading => _heavyLoading;
-  bool get isOrderPlacing => _isOrderPlacing;
-  bool get verifyingPayment => _isVerifyingPayment;
-  List<Products> get cartItems => List.unmodifiable(_cartItems);
+
+  bool get isCouponLoading => _isCouponLoading;
+
+  bool get isApplyingCoupon => _isApplyingCoupon;
+
+  List<Products> get cartItems => _cartItems;
+
   Data? get cartData => _cartData;
 
-  String get addressErrorMessage {
-    if (selectedAddressId == null || selectedAddressId!.isEmpty) {
-      return "Please select an Address";
-    } else if (!isDeliverable) {
-      return deliveryErrorMessage;
-    }
-    return "";
+  List<Coupons> coupons = [];
+
+  Rules? rule;
+
+  int balance = 0;
+
+  void putApplyingCoupon(bool value) {
+    _isApplyingCoupon = value;
+    notifyListeners();
   }
 
-  bool get hasAddressError =>
-      selectedAddressId == null ||
-          selectedAddressId!.isEmpty ||
-          !isDeliverable;
+  void putCouponLoading(bool value) {
+    _isCouponLoading = value;
+    notifyListeners();
+  }
 
   Future<void> getRules() async {
     putLoading(true);
     try {
       final response = await LoyaltyServices.getLoyaltyPointsRules();
+
       if (response != null) {
         rule = response.data;
       }
     } catch (e) {
-      log("getRules error: $e");
-    } finally {
-      putLoading(false);
+      log("$e");
     }
+    putLoading(false);
   }
 
   Future<void> fetchBalance() async {
@@ -98,17 +105,18 @@ class CartProvider extends ChangeNotifier {
     try {
       balance = await LoyaltyServices.getLoyaltyPointsBalance();
     } catch (e) {
-      log("fetchBalance error: $e");
-    } finally {
-      putLoading(false);
+      log("$e");
     }
+    putLoading(false);
   }
 
   void toggleLoyaltyPoint() {
     useLoyaltyPoint = !useLoyaltyPoint;
     if (!useLoyaltyPoint) {
+      // reset if disabling
       loyaltyPointsToRedeem = 0;
       loyaltyPointController.clear();
+      applyLoyaltyPoints();
     }
     notifyListeners();
   }
@@ -116,8 +124,6 @@ class CartProvider extends ChangeNotifier {
   Future<void> applyLoyaltyPoints() async {
     final ruleLocal = rule;
     if (ruleLocal == null) return;
-
-    final prevPoints = loyaltyPointsToRedeem;
 
     final subtotal = double.tryParse(priceSummary?.data?.total ?? '0') ?? 0;
     final minPoints = ruleLocal.minPointsForRedemption ?? 0;
@@ -127,7 +133,7 @@ class CartProvider extends ChangeNotifier {
     final maxPointsByPercent =
         ((subtotal * maxPercent) / 100) ~/ valuePerPoint; // integer division
     final maxRedeemable =
-    balance < maxPointsByPercent ? balance : maxPointsByPercent;
+        balance < maxPointsByPercent ? balance : maxPointsByPercent;
 
     int enteredPoints = int.tryParse(loyaltyPointController.text.trim()) ?? 0;
 
@@ -139,14 +145,18 @@ class CartProvider extends ChangeNotifier {
 
     loyaltyPointsToRedeem = appliedPoints;
 
+    // if nothing to redeem, clear the field to avoid sending stale data
     if (loyaltyPointsToRedeem == 0) {
       loyaltyPointController.text = '';
     } else {
+      // keep the controller in sync
       loyaltyPointController.text = loyaltyPointsToRedeem.toString();
     }
 
-    if (prevPoints != loyaltyPointsToRedeem &&
-        selectedLatitude != null &&
+    notifyListeners();
+
+    // reload price summary only if prerequisites are present
+    if (selectedLatitude != null &&
         selectedLongitude != null &&
         cartData?.cartId != null) {
       await loadPriceSummary(
@@ -155,65 +165,75 @@ class CartProvider extends ChangeNotifier {
         cartId: cartData!.cartId!,
       );
     }
-
-    notifyListeners();
   }
 
-  Future<void> setCouponCode({required String code}) async {
+  Future<void> setCouponCode(
+      {required String code, required BuildContext context}) async {
+    putApplyingCoupon(true);
     selectedCouponCode = code;
-    if (_canLoadPriceSummary) {
-      await loadPriceSummary(
+    final response = await loadPriceSummary(
         longitude: selectedLongitude!,
         latitude: selectedLatitude!,
-        cartId: _cartData!.cartId!,
-      );
+        cartId: _cartData!.cartId!);
+    putApplyingCoupon(false);
+
+    if (response) {
+      showSnackBar(context,
+          message: "Coupon Applied Successfully",
+          backgroundColor: Colors.green);
+      selectedCouponCode = code;
+    } else {
+      selectedCouponCode = "";
+      showSnackBar(context,
+          message: "Failed to Apply Coupon", backgroundColor: Colors.red);
     }
-    notifyListeners();
   }
 
-  Future<void> removeCouponCode() async {
+  Future<void> setCouponCodeFromTextField(
+      {required BuildContext context}) async {
+    if (couponController.text.isEmpty) {
+      showSnackBar(context,
+          message: "Please enter a coupon code", backgroundColor: Colors.red);
+      return;
+    }
+    final code = couponController.text.trim();
+    setCouponCode(code: code, context: context);
+  }
+
+  void removeCouponCode() async {
+    putApplyingCoupon(true);
     selectedCouponCode = "";
-    if (_canLoadPriceSummary) {
-      await loadPriceSummary(
+    await loadPriceSummary(
         longitude: selectedLongitude!,
         latitude: selectedLatitude!,
-        cartId: _cartData!.cartId!,
-      );
-    }
-    notifyListeners();
+        cartId: _cartData!.cartId!);
+    putApplyingCoupon(false);
   }
 
   Future<void> getAllCoupons({required String restaurantId}) async {
-    putLoading(true);
-    try {
-      final response =
-      await CouponServices.getAllCoupons(restaurantId: restaurantId);
-      if (response != null && response.coupon != null) {
-        coupons
-          ..clear()
-          ..addAll(response.coupon!);
-        log("Fetched ${coupons.length} coupons.");
-      }
-    } catch (e) {
-      log("getAllCoupons error: $e");
-    } finally {
-      putLoading(false);
+    putCouponLoading(true);
+    final response =
+        await CouponServices.getAllCoupons(restaurantId: restaurantId);
+
+    if (response != null && response.coupon != null) {
+      coupons.clear();
+      coupons.addAll(response.coupon ?? []);
+      print(coupons);
     }
+
+    putCouponLoading(false);
   }
 
+  /// ---- Receiver Info ----
   Future<void> fetchUserData() async {
-    try {
-      final response = await ProfileServices.fetchProfile();
-      final user = response?.data;
-      if (user != null) {
-        receiverName = user.name ?? "";
-        receiverPhone = user.phone ?? "";
-        receiverNameController.text = receiverName;
-        phoneNumberController.text = receiverPhone;
-        notifyListeners();
-      }
-    } catch (e) {
-      log("fetchUserData error: $e");
+    final response = await ProfileServices.fetchProfile();
+    final user = response?.data;
+    if (user != null) {
+      receiverName = user.name ?? "";
+      receiverPhone = user.phone ?? "";
+      receiverNameController.text = receiverName;
+      phoneNumberController.text = receiverPhone;
+      notifyListeners();
     }
   }
 
@@ -244,6 +264,7 @@ class CartProvider extends ChangeNotifier {
     context.pop();
   }
 
+  /// ---- Address Handling ----
   Future<void> getAllAddress() async {
     toggleLoading();
     try {
@@ -251,8 +272,6 @@ class CartProvider extends ChangeNotifier {
       if (response?.messageType == "success") {
         addresses = response!.addresses ?? [];
       }
-    } catch (e) {
-      log("getAllAddress error: $e");
     } finally {
       toggleLoading();
     }
@@ -269,6 +288,7 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// ---- Loading State ----
   void toggleLoading() => putLoading(!_isLoading);
 
   void putLoading(bool value) {
@@ -281,20 +301,12 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void putVerifyPayment(bool value) {
-    _isVerifyingPayment = value;
-    notifyListeners();
-  }
-
-  void putPlaceOrderLoading(bool value) {
-    _isOrderPlacing = value;
-    notifyListeners();
-  }
-
+  /// ---- Cart Handling ----
   Future<void> getAllCart(BuildContext context) async {
     putHeavyLoading(true);
     try {
-      await Future.wait([fetchBalance(), getRules()]);
+      await fetchBalance();
+      await getRules();
 
       final response = await CartServices.getAllCart();
       final products = response.data?.products;
@@ -348,50 +360,45 @@ class CartProvider extends ChangeNotifier {
     );
   }
 
-  bool get _canLoadPriceSummary =>
-      selectedLatitude != null &&
-          selectedLongitude != null &&
-          cartData?.cartId != null;
-
-  Future<void> loadPriceSummary({
+  Future<bool> loadPriceSummary({
     required String longitude,
     required String latitude,
     required String cartId,
   }) async {
     log("Load Price Summary Called");
+
     putLoading(true);
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-      if (token == null) return;
+      if (token == null) return false;
 
       final result = await _priceService.fetchPriceSummary(
-        token: token,
-        longitude: longitude,
-        latitude: latitude,
-        cartId: cartId,
-        couponCode:
-        selectedCouponCode.isNotEmpty ? selectedCouponCode : null,
-        loyaltyPoints: loyaltyPointController.text.trim().isNotEmpty
-            ? loyaltyPointController.text.trim()
-            : null,
-      );
+          token: token,
+          longitude: longitude,
+          latitude: latitude,
+          cartId: cartId,
+          couponCode: selectedCouponCode.isNotEmpty ? selectedCouponCode : null,
+          loyaltyPoints: loyaltyPointController.text.trim().isNotEmpty
+              ? loyaltyPointController.text.trim()
+              : null);
 
       if (result != null && result.messageType == "success") {
         priceSummary = result;
         isDeliverable = true;
         deliveryErrorMessage = "";
+        return true;
       } else {
         isDeliverable = false;
         deliveryErrorMessage = result?.message ?? "Error can't deliver!";
+        return false;
       }
-    } catch (e) {
-      log("loadPriceSummary error: $e");
     } finally {
       putLoading(false);
     }
   }
 
+  /// ---- Add to Cart with Debounce ----
   void addToCart({
     required String restaurantId,
     required String productId,
@@ -417,12 +424,13 @@ class CartProvider extends ChangeNotifier {
 
     _debouncers[productId]!.debounce(() async {
       try {
-        await CartServices.addToCart(requestBody: {
+        final response = await CartServices.addToCart(requestBody: {
           "restaurantId": restaurantId,
           "products": [
             {"productId": productId, "quantity": quantity}
           ],
         });
+        log("Add to cart response: ${response.message}");
         await loadInitialPriceSummary(context);
       } catch (e) {
         log("Error in addToCart: $e");
@@ -431,15 +439,14 @@ class CartProvider extends ChangeNotifier {
   }
 
   void _setupDebouncerIfAbsent(String productId) {
-    _debouncers[productId] ??= Debouncer(delay: const Duration(milliseconds: 900));
+    _debouncers[productId] ??=
+        Debouncer(delay: const Duration(milliseconds: 900));
   }
 
+  /// ---- Order Placement ----
   Future<void> placeCashOnDeliveryOrder({required BuildContext context}) async {
-    putPlaceOrderLoading(true);
-    if (!_validateBeforePlacingOrder(context)) {
-      putPlaceOrderLoading(false);
-      return;
-    }
+    putLoading(true);
+    if (!_validateBeforePlacingOrder(context)) return;
 
     try {
       final response = await OrderService.placeOrder(
@@ -451,43 +458,63 @@ class CartProvider extends ChangeNotifier {
       if (response?.orderId != null) {
         showSnackBar(context,
             message: response!.message ?? "", backgroundColor: Colors.green);
+        getAllCart(context);
         context.goNamed(Home.route);
       }
     } catch (e) {
       showSnackBar(context,
           message: "Failed to Order", backgroundColor: AppColors.baseColor);
-    } finally {
-      putPlaceOrderLoading(false);
-      await getAllCart(context);
     }
+    putLoading(false);
+    getAllCart(context);
   }
 
   Future<void> placeRazorpayOrder({
     required BuildContext context,
-    required double amount,
   }) async {
-    if (!_validateBeforePlacingOrder(context)) return;
-    putPlaceOrderLoading(true);
+    final summary = priceSummary?.data;
+    double grandTotal = double.tryParse(summary?.total ?? '0') ?? 0;
+
+    putLoading(true);
+
+    debugPrint('1. Starting placeRazorpayOrder');
+    if (!_validateBeforePlacingOrder(context)) {
+      debugPrint('2. Validation failed');
+      return;
+    }
+
+    debugPrint('3. Loading started');
 
     try {
+      debugPrint('4. Fetching profile');
       final profile = await ProfileServices.fetchProfile();
+      debugPrint('5. Profile fetched: ${profile != null}');
+
+      debugPrint('6. Placing order');
       final response = await OrderService.placeOrder(
         cartId: cartData!.cartId!,
         addressId: selectedAddressId!,
         paymentMethod: "online",
       );
+      debugPrint('7. Order placed: ${response != null}');
 
       if (response?.orderId == null) {
-        showSnackBar(context,
-            message: "Failed to Place Order", backgroundColor: Colors.red);
+        putLoading(false);
+        debugPrint('8. Order ID is null');
+
+        if (context.mounted) {
+          showSnackBar(context,
+              message: "Failed to Place Order", backgroundColor: Colors.red);
+        }
         return;
       }
 
+      debugPrint('9. Before navigation to Razorpay');
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => RazorpayPaymentScreen(
-            amount: amount,
+            amount: grandTotal,
             email: profile!.data!.email!,
             phone: profile.data!.phone!,
             orderId: response!.razorpayOrderId!,
@@ -495,15 +522,17 @@ class CartProvider extends ChangeNotifier {
           ),
         ),
       );
+      debugPrint('10. Returned from Razorpay: $result');
 
       if (result == null || result['success'] != true) {
-        showSnackBar(context,
-            message: result?['message'] ?? "Payment was not completed",
-            backgroundColor: Colors.red);
+        if (context.mounted) {
+          showSnackBar(context,
+              message: "Payment was not completed",
+              backgroundColor: Colors.red);
+        }
         return;
       }
 
-      putVerifyPayment(true);
       final verifyResponse = await OrderService.verifyPayment(
         razorpayPaymentId: result['paymentId'],
         razorpayOrderId: result['orderId'],
@@ -511,19 +540,25 @@ class CartProvider extends ChangeNotifier {
         orderId: response!.orderId!,
       );
 
-      if (verifyResponse?.messageType == "success") {
+      if (verifyResponse?.messageType == "success" && context.mounted) {
         showSnackBar(context,
             message: verifyResponse!.message ?? "",
             backgroundColor: Colors.green);
+
+        getAllCart(context);
         context.goNamed(Home.route);
       }
     } catch (e) {
-      showSnackBar(context,
-          message: "Failed to Order", backgroundColor: AppColors.baseColor);
+      debugPrint('ERROR in placeRazorpayOrder: $e');
+      if (context.mounted) {
+        showSnackBar(context,
+            message: "An error occurred during payment",
+            backgroundColor: Colors.red);
+      }
     } finally {
-      putPlaceOrderLoading(false);
-      putVerifyPayment(false);
+      putLoading(false);
     }
+    putLoading(false);
   }
 
   bool _validateBeforePlacingOrder(BuildContext context) {
@@ -539,18 +574,5 @@ class CartProvider extends ChangeNotifier {
       return false;
     }
     return true;
-  }
-
-  @override
-  void dispose() {
-    cookingInstruction.dispose();
-    deliveryInstruction.dispose();
-    receiverNameController.dispose();
-    phoneNumberController.dispose();
-    loyaltyPointController.dispose();
-    for (final debouncer in _debouncers.values) {
-      debouncer.cancel(); // implement cancel in Debouncer if missing
-    }
-    super.dispose();
   }
 }

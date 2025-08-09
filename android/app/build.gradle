@@ -1,10 +1,16 @@
 plugins {
     id "com.android.application"
-    // START: FlutterFire Configuration
     id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
 }
 
 android {
@@ -13,7 +19,6 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        // Java 8 compatibility + core library desugaring enabled
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
         coreLibraryDesugaringEnabled true
@@ -27,14 +32,27 @@ android {
         applicationId "com.example.orado_customer"
         minSdk 23
         targetSdk flutter.targetSdkVersion
-        versionCode flutter.versionCode
+        versionCode flutter.versionCode.toInteger()
         versionName flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            keyAlias 'upload'
+            keyPassword localProperties.getProperty('keyPassword')
+            storeFile file(localProperties.getProperty('storeFile'))
+            storePassword localProperties.getProperty('storePassword')
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.debug
         }
     }
 }
@@ -44,9 +62,6 @@ flutter {
 }
 
 dependencies {
-    // Required for Play Core (Flutter deferred components)
     implementation "com.google.android.play:core:1.10.3"
-
-    // Core library desugaring (updated to satisfy flutter_local_notifications requirement)
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }

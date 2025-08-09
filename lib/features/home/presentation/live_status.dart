@@ -134,12 +134,6 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
     }
   }
 
-  @override
-  void dispose() {
-    context.read<LiveStatusProvider>().removeListener(_onProviderUpdate);
-    super.dispose();
-  }
-
   Widget _buildStageTile(int index, {required bool completed}) {
     final stage = dummyStages[index];
     return Padding(
@@ -244,117 +238,126 @@ class _LiveStatusScreenState extends State<LiveStatusScreen> {
               ? "Call: ${agent.phoneNumber}"
               : "Waiting for assignment";
           return SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 300,
-                  child:
-                      _restaurantLocation == null || _deliveryLocation == null
-                          ? const Center(child: CircularProgressIndicator())
-                          : MapView(
-                              restaurantLocation: _restaurantLocation!,
-                              deliveryLocation: _deliveryLocation!,
-                              agentLocation: _currentAgentLocation,
-                              mapStyleAsset: 'assets/map_style.json',
-                            ),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatStatusText(liveProvider),
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade100,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          "ON TIME",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.green),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (liveProvider.latestUpdate != null)
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "Updated ${_timeAgo(liveProvider.latestUpdate!.timestamp)}",
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.grey.shade300,
-                        child: agent != null
-                            ? Image.network(PlaceHolders.deliveryAgentIcon)
-                            : const Icon(Icons.person, color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              agent != null
-                                  ? "$agentName is on the way to deliver your order"
-                                  : agentName,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              subtitle,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: agent != null
-                                    ? Colors.black54
-                                    : Colors.orange,
+            child: Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12))),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 300,
+                    child:
+                        _restaurantLocation == null || _deliveryLocation == null
+                            ? const Center(child: CircularProgressIndicator())
+                            : MapView(
+                                restaurantLocation: _restaurantLocation!,
+                                deliveryLocation: _deliveryLocation!,
+                                agentLocation: _currentAgentLocation,
+                                mapStyleAsset: 'assets/map_style.json',
+                                googleDirectionsApiKey:
+                                    'AIzaSyDPr_DCptP8sV7JXOWidtIOFzfhqswgOSM',
                               ),
-                            ),
-                          ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Padding(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 16),
+                  //   child: Row(
+                  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //     children: [
+                  //       Text(
+                  //         _formatStatusText(liveProvider),
+                  //         style: const TextStyle(
+                  //             fontSize: 18, fontWeight: FontWeight.bold),
+                  //       ),
+                  //       Container(
+                  //         padding: const EdgeInsets.symmetric(
+                  //             horizontal: 12, vertical: 6),
+                  //         decoration: BoxDecoration(
+                  //           color: Colors.green.shade100,
+                  //           borderRadius: BorderRadius.circular(20),
+                  //         ),
+                  //         child: const Text(
+                  //           "ON TIME",
+                  //           style: TextStyle(
+                  //               fontWeight: FontWeight.bold, color: Colors.green),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  if (liveProvider.latestUpdate != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 6),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Updated ${_timeAgo(liveProvider.latestUpdate!.timestamp)}",
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.grey[600]),
                         ),
                       ),
-                      if (agent != null)
-                        IconButton(
-                          onPressed: () {
-                            // TODO: implement call using agent.phoneNumber
-                          },
-                          icon: const Icon(Icons.call, color: Colors.orange),
+                    ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.grey.shade300,
+                          child: agent != null
+                              ? Image.network(PlaceHolders.deliveryAgentIcon)
+                              : const Icon(Icons.person, color: Colors.white),
                         ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: List.generate(
-                      dummyStages.length,
-                      (i) => _buildStageTile(i, completed: i <= stageIndex),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                agent != null
+                                    ? "$agentName is on the way to deliver your order"
+                                    : agentName,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                subtitle,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: agent != null
+                                      ? Colors.black54
+                                      : Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (agent != null)
+                          IconButton(
+                            onPressed: () {
+                              // TODO: implement call using agent.phoneNumber
+                            },
+                            icon: const Icon(Icons.call, color: Colors.orange),
+                          ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 30),
-              ],
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: List.generate(
+                        dummyStages.length,
+                        (i) => _buildStageTile(i, completed: i <= stageIndex),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           );
         }));
